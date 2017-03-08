@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		/* parse the data */
-		rv = sscanf(line, "%lf,%lf,%lf,%f,%f,%f,%f,%f\n", &t1, &t2, &(data_arry[i].accel_x), &accel_y, &accel_z, &gyro_x, &gyro_y, &gyro_z);
+		rv = sscanf(line, "%lf,%lf,%f,%lf,%f,%f,%f,%f\n", &t1, &t2, &accel_y, &(data_arry[i].accel_x), &accel_z, &gyro_x, &gyro_y, &gyro_z);
 		if (rv != 8) {
 			fprintf(stderr,
 					"%s %d \'%s\'. %s.\n",
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
 			start_time = t1;
 
 		//fprintf(stdout, "%20.10lf, %20.10lf\n", t1, t2);
-		data_arry[i].time = ((t1 - start_time) + (t2 - start_time))/2.0;
+		data_arry[i].time = (t1 + t2)/2.0 - start_time;
 		i++;
 	}
 	fclose(fp);
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 				n_S++;
 			}
 			// if peak is far enough from previous peak/trough
-			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.15){
 				S_i[n_S] = P_i[i];
 				i++;
 				n_S++;
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
 				n_S++;
 			}
 			// if the trough is far enough from previous peak/trough
-			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.15){
 				S_i[n_S] = T_i[j];
 				j++;
 				n_S++;
@@ -310,7 +310,7 @@ int main(int argc, char **argv)
 	while(i < n_P){
 		idx_p = P_i[i];
 		// if peak is far enough from previous peak/trough, keep
-		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.15){
 			S_i[n_S] = P_i[i];
 			n_S++;
 			i++;
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
 	while(j < n_T){
 		idx_t = T_i[j];
 		// if trough is far enough from previous peak/trough, keep
-		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.15){
 			S_i[n_S] = T_i[j];
 			n_S++;
 			j++;

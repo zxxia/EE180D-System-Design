@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 	int i, idx;
 	int rv;
 	/* Variables for reading file line by line */
-	char *ifile_name, *ofile_pt_name, *ofile_st_name;
+	char *ifile_name, *ofile_pt_name, *ofile_st_name, *ofile_feature_name;
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
@@ -135,6 +135,7 @@ int main(int argc, char **argv)
 	// *t, *accel_x, 
 	struct Data *data_arry;
 	float pk_threshold;	// pk-threshold value
+	float time_constraint;
 
 	double t1, t2; // variable used to parse time_before and time_after
 	double start_time; // variable used to computer sampling time
@@ -167,15 +168,17 @@ int main(int argc, char **argv)
 	 * Or 
 	 * ./extract_stride_data
 	 */
-	if (argc != 5) {
-		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <output file> <threshold>");
+	if (argc != 7) {
+		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <feature output file> <threshold> <time constraints>");
 		exit(EXIT_FAILURE);
 
 	} else {
 		ifile_name = argv[1];
 		ofile_pt_name = argv[2];
 		ofile_st_name = argv[3];
-		pk_threshold = atof(argv[4]);
+		ofile_feature_name = argv[4];
+		pk_threshold = atof(argv[5]);
+		time_constraint = atof(argv[6]);
 	}
 
 	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\n",
@@ -297,7 +300,7 @@ int main(int argc, char **argv)
 				n_S++;
 			}
 			// if peak is far enough from previous peak/trough
-			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.15){
+			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 				S_i[n_S] = P_i[i];
 				peak[peak_num] = P_i[i];
 				peak_num++;
@@ -319,7 +322,7 @@ int main(int argc, char **argv)
 				n_S++;
 			}
 			// if the trough is far enough from previous peak/trough
-			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.15){
+			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 				S_i[n_S] = T_i[j];
 				trough[trough_num] = T_i[j];
 				trough_num++;
@@ -334,7 +337,7 @@ int main(int argc, char **argv)
 	while(i < n_P){
 		idx_p = P_i[i];
 		// if peak is far enough from previous peak/trough, keep
-		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.15){
+		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 			S_i[n_S] = P_i[i];
 			peak[peak_num] = P_i[i];
 			peak_num++;
@@ -348,7 +351,7 @@ int main(int argc, char **argv)
 	while(j < n_T){
 		idx_t = T_i[j];
 		// if trough is far enough from previous peak/trough, keep
-		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.15){
+		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 			S_i[n_S] = T_i[j];
 			trough[trough_num] = T_i[j];
 			trough_num++;
@@ -427,8 +430,8 @@ int main(int argc, char **argv)
 	}
 	fclose(fp);
 
-	printf("Attempting to write to file \'%s\'.\n", "feature.csv");
-	fp = fopen("feature.csv", "w");
+	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
+	fp = fopen(ofile_feature_name, "w");
 	if (fp == NULL) {
 		fprintf(stderr, 
 				"Failed to write to file \'%s\'.\n", 

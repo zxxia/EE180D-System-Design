@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
 	//Declaration
 	int i;
 	const int numPatterns = 3;
-	const char *targetName = "test_data.txt";
 	FILE *fp;
 	int rv;
 	struct SampleInfo sampleInfo;
@@ -54,8 +53,8 @@ int main(int argc, char **argv) {
 	double* period;
 
 	//Initialization
-	if(argc != 5) {
-		fprintf(stderr, "Usage: %s <read file_name> <pattern> <input neuron num> <output neuron num>\n",
+	if(argc != 6) {
+		fprintf(stderr, "Usage: %s <read file_name> <output train file> <pattern> <input neuron num> <output neuron num>\n",
 				argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -114,8 +113,8 @@ int main(int argc, char **argv) {
 
 	
 
-	fprintf(stdout, "Open %s...\n", targetName);
-	fp = fopen(targetName, "w+");
+	fprintf(stdout, "Open %s...\n", argv[2]);
+	fp = fopen(argv[2], "w+");
 
 	if(!fp) {
 		fprintf(stderr, "Fail to open file: test_data.txt\n");
@@ -127,12 +126,12 @@ int main(int argc, char **argv) {
 	
 
 	//Initialization
-	pattern = argv[2];
+	pattern = argv[3];
 	sampleInfo.numSamples = N_SAMPLES;
-	sampleInfo.numInputNeurons = argv[3];
-	sampleInfo.numOutputNeurons = argv[4];
+	sampleInfo.numInputNeurons = argv[4];
+	sampleInfo.numOutputNeurons = argv[5];
 
-	fprintf(stdout, "Write to %s...\n", targetName);
+	fprintf(stdout, "Write to %s...\n", argv[2]);
 
 	//Generate Header
 	if(generateHeader(fp, sampleInfo) == 0){
@@ -151,7 +150,7 @@ int main(int argc, char **argv) {
 	free(peak);
 	free(trough);
 	free(period);
-	fprintf(stdout, "Close %s...\n", targetName);
+	fprintf(stdout, "Close %s...\n", argv[2]);
 	fclose(fp);
 	return 0;
 }

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	a_scale = A_SCALE_4G;
+	a_scale = A_SCALE_6G;
 	g_scale = G_SCALE_500DPS;
 
 	accel = accel_init();

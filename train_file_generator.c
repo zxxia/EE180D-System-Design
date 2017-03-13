@@ -37,7 +37,7 @@ void writePattern(FILE *fp_write, char *pattern, const int numPatterns);
 int main(int argc, char **argv) {
 	//Declaration
 	int i;
-	const int numPatterns = 3;
+	const int numPatterns = 4;
 	FILE *fp;
 	int rv;
 	struct SampleInfo sampleInfo;

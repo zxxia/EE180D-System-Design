@@ -117,6 +117,8 @@ find_peaks_and_troughs(
 	return 0;
 }
 
+
+
 int main(int argc, char **argv)
 {
 	/* Generic variables */
@@ -275,10 +277,8 @@ int main(int argc, char **argv)
 	S_i = (int *) malloc(sizeof(int) * (n_P + n_T));
 	peak = (int *) malloc(sizeof(int) * (n_P));
 	trough = (int*) malloc(sizeof(int) * (n_T));
-	int peak_num;
-	int trough_num;
-	peak_num = 0;
-	trough_num = 0;
+	int peak_num = 0;
+	int trough_num = 0;
 
 	int idx_p;
 	int idx_t;

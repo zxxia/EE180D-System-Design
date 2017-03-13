@@ -25,9 +25,9 @@ int main()
 
     while (1) {
         max = -100;
-        scanf("Inupt1： %f\n", &input[0]);
-        scanf("Inupt2： %f\n", &input[1]);
-        scanf("Inupt3： %f\n", &input[2]);     
+        scanf("Inupt1: %f\n", &input[0]);
+        scanf("Inupt2: %f\n", &input[1]);
+        scanf("Inupt3: %f\n", &input[2]);     
         calc_out = fann_run(ann, input);
 
         for (i = 0; i < 3; i++) {

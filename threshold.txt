@@ -1,0 +1,2 @@
+File name, threshold, time contraint
+data0.csv, 0.8, 0.15

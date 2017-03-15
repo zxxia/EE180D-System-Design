@@ -13,9 +13,10 @@
 struct Data{
 	double time;
 	double accel_x;
-	//float accel_y;
+	//double accel_y;
 	//float accel_z;
 };
+
 
 /*
  * sets first <n> values in <*arr> to <val>
@@ -116,13 +117,15 @@ find_peaks_and_troughs(
 	return 0;
 }
 
+
+
 int main(int argc, char **argv)
 {
 	/* Generic variables */
 	int i, idx;
 	int rv;
 	/* Variables for reading file line by line */
-	char *ifile_name, *ofile_pt_name, *ofile_st_name;
+	char *ifile_name, *ofile_pt_name, *ofile_st_name, *ofile_feature_name;
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
@@ -134,6 +137,7 @@ int main(int argc, char **argv)
 	// *t, *accel_x, 
 	struct Data *data_arry;
 	float pk_threshold;	// pk-threshold value
+	float time_constraint;
 
 	double t1, t2; // variable used to parse time_before and time_after
 	double start_time; // variable used to computer sampling time
@@ -141,6 +145,12 @@ int main(int argc, char **argv)
 	int *P_i; 	// indicies of each peak found by peak detection
 	int *T_i; 	// indicies of each trough found by trough detection
 	int *S_i; 	// indicies of the start of each stride
+	
+	// Feature needed
+	int *peak;
+	int *trough;
+	double* period;
+
 	int n_P; 	// number of peaks
 	int n_T; 	// number of troughs
 	int n_S; 	// number of strides
@@ -160,15 +170,17 @@ int main(int argc, char **argv)
 	 * Or 
 	 * ./extract_stride_data
 	 */
-	if (argc != 5) {
-		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <output file> <threshold>");
+	if (argc != 7) {
+		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <feature output file> <threshold> <time constraints>");
 		exit(EXIT_FAILURE);
 
 	} else {
 		ifile_name = argv[1];
 		ofile_pt_name = argv[2];
 		ofile_st_name = argv[3];
-		pk_threshold = atof(argv[4]);
+		ofile_feature_name = argv[4];
+		pk_threshold = atof(argv[5]);
+		time_constraint = atof(argv[6]);
 	}
 
 	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\n",
@@ -222,7 +234,7 @@ int main(int argc, char **argv)
 			start_time = t1;
 
 		//fprintf(stdout, "%20.10lf, %20.10lf\n", t1, t2);
-		data_arry[i].time = ((t1 - start_time) + (t2 - start_time))/2.0;
+		data_arry[i].time = (t1 + t2)/2.0 - start_time;
 		i++;
 	}
 	fclose(fp);
@@ -234,7 +246,7 @@ int main(int argc, char **argv)
 	 */
 	P_i = (int *) malloc(sizeof(int) * N_SAMPLES);
 	T_i = (int *) malloc(sizeof(int) * N_SAMPLES);
-	S_i = (int *) malloc(sizeof(int) * N_SAMPLES);
+	
 	rv = find_peaks_and_troughs(
 			data_arry, 
 			N_SAMPLES, 
@@ -245,10 +257,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "find_peaks_and_troughs failed\n");
 		free(P_i);
 		free(T_i);
-		free(S_i);
 		free(data_arry);
 		exit(EXIT_FAILURE);
 	}
+	P_i = (int *) realloc(P_i, sizeof(int) * n_P);
+	T_i = (int *) realloc(T_i, sizeof(int) * n_T);
 
 	/* DO NOT MODIFY ANYTHING BEFORE THIS LINE */
 
@@ -261,6 +274,12 @@ int main(int argc, char **argv)
 
 	/* DO NOT MODIFY ANYTHING AFTER THIS LINE */
 	printf("Attempting to sort.\n");
+	S_i = (int *) malloc(sizeof(int) * (n_P + n_T));
+	peak = (int *) malloc(sizeof(int) * (n_P));
+	trough = (int*) malloc(sizeof(int) * (n_T));
+	int peak_num = 0;
+	int trough_num = 0;
+
 	int idx_p;
 	int idx_t;
 	int j;
@@ -275,12 +294,16 @@ int main(int argc, char **argv)
 			// 1st one is always good
 			if(n_S==0){
 				S_i[n_S] = P_i[i];
+				peak[peak_num] = P_i[i];
+				peak_num++;
 				i++;
 				n_S++;
 			}
 			// if peak is far enough from previous peak/trough
-			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 				S_i[n_S] = P_i[i];
+				peak[peak_num] = P_i[i];
+				peak_num++;
 				i++;
 				n_S++;
 			}
@@ -293,12 +316,16 @@ int main(int argc, char **argv)
 			// 1st one is always good
 			if(n_S==0){
 				S_i[n_S] = T_i[j];
+				trough[trough_num] = T_i[j];
+				trough_num++;
 				j++;
 				n_S++;
 			}
 			// if the trough is far enough from previous peak/trough
-			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 				S_i[n_S] = T_i[j];
+				trough[trough_num] = T_i[j];
+				trough_num++;
 				j++;
 				n_S++;
 			}
@@ -310,8 +337,10 @@ int main(int argc, char **argv)
 	while(i < n_P){
 		idx_p = P_i[i];
 		// if peak is far enough from previous peak/trough, keep
-		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 			S_i[n_S] = P_i[i];
+			peak[peak_num] = P_i[i];
+			peak_num++;
 			n_S++;
 			i++;
 		}
@@ -322,14 +351,21 @@ int main(int argc, char **argv)
 	while(j < n_T){
 		idx_t = T_i[j];
 		// if trough is far enough from previous peak/trough, keep
-		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= 0.05){
+		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
 			S_i[n_S] = T_i[j];
+			trough[trough_num] = T_i[j];
+			trough_num++;
 			n_S++;
 			j++;
 		}
 		// too far, skip
 		else
 			j++;
+	}
+
+	period = (double*) malloc(sizeof(double)*(peak_num - 1));
+	for(i = 0; i < peak_num-1; i++){
+		period[i] = data_arry[peak[i+1]].time - data_arry[peak[i]].time;
 	}
 
 	/* open the output file to write the peak and trough data */
@@ -394,10 +430,35 @@ int main(int argc, char **argv)
 	}
 	fclose(fp);
 
+	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
+	fp = fopen(ofile_feature_name, "w");
+	if (fp == NULL) {
+		fprintf(stderr, 
+				"Failed to write to file \'%s\'.\n", 
+				ofile_st_name
+		       );
+		free(P_i);
+		free(T_i);
+		free(S_i);
+		free(data_arry);
+		free(peak);
+		free(trough);
+		free(period);
+		exit(EXIT_FAILURE);
+	}
+	fprintf(fp, "Stride_Max,Stride_Min,Period\n");
+	for(i = 0; i < peak_num-1 && i < trough_num; i++){
+		fprintf(fp, "%lf,%lf,%20.10lf\n", data_arry[peak[i]].accel_x, data_arry[trough[i]].accel_x, period[i]);
+	}
+	fclose(fp);
+
 	free(data_arry);
 	free(P_i);
 	free(T_i);
 	free(S_i);
+	free(peak);
+	free(trough);
+	free(period);
 
 	printf("extract_stride_data completed successfuly. Exiting.\n");
 

@@ -79,6 +79,17 @@ int main(int argc, char **argv)
         printf("Input values: %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], location);
         sleep(1);
     }
+
+    int row;
+    int col;
+    for(row = 0; row < 4; row++) {
+        for(col = 0; col < 4; col++) {
+            fprintf(stderr,"%d\t", conf_matrix[row][col]);
+        }
+        fprintf(stderr,"\n");
+    }
+
+
     fclose(fp);
     fann_destroy(ann);
     return 0;

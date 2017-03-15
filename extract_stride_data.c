@@ -183,11 +183,12 @@ int main(int argc, char **argv)
 		time_constraint = atof(argv[6]);
 	}
 
-	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\n",
+	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\t\n%s=%f\n",
 			"ifile_name", ifile_name,
 			"ofile_peak_trough_name", ofile_pt_name,
 			"ofile_stride_name", ofile_st_name,
-			"peak_threshold", pk_threshold
+			"peak_threshold", pk_threshold,
+			"time_contraint", time_constraint
 	      );
 
 	/* open the input file */
@@ -281,35 +282,29 @@ int main(int argc, char **argv)
 	int trough_num = 0;
 
 	int idx_p;
-	int idx_t;
-	int j;
-	i = 0;
-	j = 0;
-	while(i < n_P && j < n_T){
+	i = 1;
+	while(i < n_P-1){
 		idx_p = P_i[i];
-		idx_t = T_i[j];
 
-		// if peak is in front of trough
-		if(data_arry[idx_p].time < data_arry[idx_t].time){
-			// 1st one is always good
-			if(n_S==0){
-				S_i[n_S] = P_i[i];
-				peak[peak_num] = P_i[i];
-				peak_num++;
-				i++;
-				n_S++;
-			}
-			// if peak is far enough from previous peak/trough
-			else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
-				S_i[n_S] = P_i[i];
-				peak[peak_num] = P_i[i];
-				peak_num++;
-				i++;
-				n_S++;
-			}
-			// peak is too close to previous peak/trough, skip
-			else
-				i++;
+		
+		if(n_S==0){
+			S_i[n_S] = P_i[i];
+			peak[peak_num] = P_i[i];
+			peak_num++;
+			i++;
+			n_S++;
+		}
+		// if peak is far enough from previous peak/trough
+		else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
+			S_i[n_S] = P_i[i];
+			peak[peak_num] = P_i[i];
+			peak_num++;
+			i++;
+			n_S++;
+		}
+		// peak is too close to previous peak/trough, skip
+		else
+			i++;
 		}
 		// if trough is in front of trough
 		else{

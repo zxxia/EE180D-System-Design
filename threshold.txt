@@ -1,3 +1,2 @@
-Data File, Threshold, Time threshold
-s3_30.csv, 2.0, 0.15
-s4_20.csv, 2.0, 0.15
+File name, threshold, time contraint
+data0.csv, 0.8, 0.15

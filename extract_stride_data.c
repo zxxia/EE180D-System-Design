@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		/* parse the data */
-		rv = sscanf(line, "%lf,%lf,%f,%lf,%f,%f,%f,%f\n", &t1, &t2, &accel_y, &(data_arry[i].accel_x), &accel_z, &gyro_x, &gyro_y, &gyro_z);
+		rv = sscanf(line, "%lf,%lf,%lf,%f,%f,%f,%f,%f\n", &t1, &t2, &(data_arry[i].accel_x), &accel_y, &accel_z, &gyro_x, &gyro_y, &gyro_z);
 		if (rv != 8) {
 			fprintf(stderr,
 					"%s %d \'%s\'. %s.\n",

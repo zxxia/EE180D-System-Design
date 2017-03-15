@@ -37,7 +37,6 @@ void writePattern(FILE *fp_write, char *pattern, const int numPatterns);
 int main(int argc, char **argv) {
 	//Declaration
 	int i;
-	const int numPatterns = 4;
 	FILE *fp;
 	int rv;
 	struct SampleInfo sampleInfo;
@@ -105,8 +104,8 @@ int main(int argc, char **argv) {
 
 	// normailize all numbers
 	fprintf(stdout, "Start to normalize data...\n");
-	normalize(peak, N_SAMPLES, 4.0);
-	normalize(trough, N_SAMPLES, 4.0);
+	normalize(peak, N_SAMPLES, 6.0);
+	normalize(trough, N_SAMPLES, 6.0);
 	normalize(period, N_SAMPLES, max(period, N_SAMPLES));
 	// normalization ends
 	fprintf(stdout, "Stop normalizing data...\n");
@@ -145,7 +144,7 @@ int main(int argc, char **argv) {
 	// Write Normalized  Feature and Pattern
 	for(i = 0; i < N_SAMPLES; i++){
 		fprintf(fp, "%lf\t%lf\t%lf\n", peak[i], trough[i], period[i]);
-		writePattern(fp, pattern, numPatterns);
+		writePattern(fp, pattern, atoi(sampleInfo.numOutputNeurons));
 	}
 	free(peak);
 	free(trough);

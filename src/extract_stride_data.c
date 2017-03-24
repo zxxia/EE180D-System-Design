@@ -137,8 +137,16 @@ int main(int argc, char **argv)
 	/* Generic variables */
 	int i, idx;
 	int rv;
-	/* Variables for reading file line by line */
-	char *ifile_name, *ofile_pt_name, *ofile_st_name, *ofile_maxmin_name, *ofile_feature_name;
+	
+	/*input file name*/
+	char* ifile_name; // data file
+	
+	/*output file names*/
+	char* ofile_pt_name; // peak&trough file
+	char* ofile_st_name; // stride detection file
+	char* ofile_maxmin_name; // feature maxmin file(t, max, t, min)
+	char *ofile_feature_name; // feature file(max min period)
+	
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
@@ -154,7 +162,7 @@ int main(int argc, char **argv)
 	double* gyro_y;
 	double* gyro_z;
 
-	float pk_threshold;	// pk-threshold value
+	float pk_threshold;
 	float time_constraint;
 
 	double t1, t2; // variable used to parse time_before and time_after
@@ -183,13 +191,12 @@ int main(int argc, char **argv)
 	/*
 	 * Check if the user entered the correct command line arguments
 	 * Usage: 
-	 * ./extract_stride_data <ifile_name> <output_peaks> <output_strides>
-	 * 				<threshold_value_float>
-	 * Or 
-	 * ./extract_stride_data
+	 * ./extract_stride_data <ifile_name> <output_peaks> <output_strides> <output maxmin file>
+	 * 				<output feature file> <threshold_value_float> <time constraint>
+	 * 
 	 */
 	if (argc != 8) {
-		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <maxmin output file><feature output file> <threshold> <time constraints>");
+		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <maxmin output file> <feature output file> <threshold> <time constraints>");
 		exit(EXIT_FAILURE);
 
 	} else {
@@ -235,7 +242,7 @@ int main(int argc, char **argv)
 	/* start reading the data from the file into the data structures */
 	i = 0;
 
-	
+	// allocate memory
 	time = (double*) malloc(sizeof(double) * N_SAMPLES);
 	accel_x = (double*) malloc(sizeof(double) * N_SAMPLES);
 	accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
@@ -274,6 +281,7 @@ int main(int argc, char **argv)
 	P_i = (int *) malloc(sizeof(int) * N_SAMPLES);
 	T_i = (int *) malloc(sizeof(int) * N_SAMPLES);
 	
+
 	rv = find_peaks_and_troughs(
 			gyro_z, 
 			N_SAMPLES, 
@@ -287,16 +295,8 @@ int main(int argc, char **argv)
 	P_i = (int *) realloc(P_i, sizeof(int) * n_P);
 	T_i = (int *) realloc(T_i, sizeof(int) * n_T);
 
-	/* DO NOT MODIFY ANYTHING BEFORE THIS LINE */
 
-	/* 
-	 * Insert your algorithm to convert from a series of peak-trough
-	 * indicies, to a series of indicies that indicate the start
-	 * of a stride.
-	 */
-
-
-	/* DO NOT MODIFY ANYTHING AFTER THIS LINE */
+	// Sort peaks to filter out inappropriate values
 	printf("Attempting to sort.\n");
 	S_i = (int *) malloc(sizeof(int) * (n_P + n_T));
 
@@ -321,11 +321,18 @@ int main(int argc, char **argv)
 			i++;
 	}
 
+
+
+	/* feature detection section*/
+	// compute period
 	period = (double*) malloc(sizeof(double)*(n_S - 1));
 	for(i = 0; i < n_S-1; i++){
 		period[i] = time[S_i[i+1]] - time[S_i[i]];
 	}
 
+
+
+	// extract maxima and minima
 	maxima = (int *) malloc(sizeof(int) * (n_S));
 	minima = (int*) malloc(sizeof(int) * (n_S));
 

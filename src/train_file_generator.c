@@ -20,11 +20,7 @@
 	  	to recognize. For this moment, pattern# = 3            
 	2.	
 */
-struct SampleInfo {
-	int numSamples;
-	char *numInputNeurons;
-	char *numOutputNeurons;
-};
+
 
 /* max: takes a double array and return the max val in array*/
 double max(double* array, int array_size);
@@ -40,7 +36,7 @@ int main(int argc, char **argv) {
 	int j;
 	FILE *fp;
 	int rv;
-//	struct SampleInfo sampleInfo;
+
 
 
 	ssize_t read; // number of lines read
@@ -69,12 +65,7 @@ int main(int argc, char **argv) {
 	outputFileName = argv[4];
 
 
-
-
-
-
-
-
+	// Open each input feature file and combine them into one train file
 	for(j = 1; j <= outputNeuronNum; j++){
 		fprintf(stdout, "Open %s...\n", argv[j]);
 		fp = fopen(argv[j], "r+");
@@ -178,7 +169,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-
+// Find max in array
 double max(double*array, int array_size){
 	double max_val = 0.0;
 	double tmp;
@@ -210,7 +201,6 @@ int generateHeader(FILE *fp_write, int numSamples, int numInputNeurons, int numO
 	return 1;
 }
 
-//Calculate Sampling time
 
 //write Pattern value
 void writePattern(FILE *fp_write, int pattern, const int numPatterns) {

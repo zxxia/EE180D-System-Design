@@ -17,8 +17,8 @@ int main(int argc, char **argv)
     FILE *fp;
     fp = fopen(argv[1], "r+");
 
-    int conf_matrix[4][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
-    int answer[4] = {-1,-1,-1,-1};
+    int conf_matrix[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
+    int answer[3] = {-1,-1,-1};
     int answerLoc;
     int numLines = 0;
     int inN = 0;
@@ -30,12 +30,12 @@ int main(int argc, char **argv)
     
     ann = fann_create_from_file("TEST.net");
 
-    fprintf(stderr,"Alive1\n");
+    //fprintf(stderr,"Alive1\n");
     /* count the number of lines in the file */
     read = getline(&line, &len, fp);
     rv = sscanf(line, "%d\t%d\t%d\n", &numLines, &inN, &outN);
     if (rv != 3) {
-        fprintf(stderr,"Failed to read line1, %d\n",rv);
+        //fprintf(stderr,"Failed to read line1, %d\n",rv);
         exit(EXIT_FAILURE);
     }
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     i = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
         max = -100;
-        fprintf(stderr,"Alive2\n");
+        //fprintf(stderr,"Alive2\n");
         /* parse the data 1*/
         rv = sscanf(line, "%f\t%f\t%f\n", &input[0], &input[1], &input[2]);
         if (rv != 3) {
@@ -51,29 +51,29 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         calc_out = fann_run(ann, input);
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 3; i++) {
             if (calc_out[i] > max) {
                 max = calc_out[i];
                 location = i;
             }
         }
 
-        fprintf(stderr,"Alive3\n");
+        //fprintf(stderr,"Alive3\n");
         read = getline(&line, &len, fp);
         /* parse the data 2*/
-        rv = sscanf(line, "%d\t%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2],&answer[3]);
-        if (rv != 4) {
+        rv = sscanf(line, "%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2]);
+        if (rv != 3) {
             fprintf(stderr,"Failed to read line3");
             exit(EXIT_FAILURE);
         }
-        fprintf(stderr,"Alive4\n");
-        for(i=0; i<4; i++) {
+        //fprintf(stderr,"Alive4\n");
+        for(i=0; i<3; i++) {
             if(answer[i] == 1) {
                 answerLoc = i;
                 break;
             }
         }
-        fprintf(stderr,"Alive5\nAnswerLoc: %d\nlocation: %d\n", answerLoc, location);
+        //fprintf(stderr,"Alive5\nAnswerLoc: %d\nlocation: %d\n", answerLoc, location);
         conf_matrix[answerLoc][location]++;
 
         printf("Input values: %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], location);
@@ -82,13 +82,12 @@ int main(int argc, char **argv)
 
     int row;
     int col;
-    for(row = 0; row < 4; row++) {
-        for(col = 0; col < 4; col++) {
+    for(row = 0; row < 3; row++) {
+        for(col = 0; col < 3; col++) {
             fprintf(stderr,"%d\t", conf_matrix[row][col]);
         }
         fprintf(stderr,"\n");
     }
-
 
     fclose(fp);
     fann_destroy(ann);

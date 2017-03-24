@@ -9,15 +9,6 @@
 
 #define BUFF_SIZE 1024
 
-
-struct Data{
-	double time;
-	double accel_x;
-	//double accel_y;
-	//float accel_z;
-};
-
-
 /*
  * sets first <n> values in <*arr> to <val>
  */
@@ -47,7 +38,7 @@ void clear_buffer(int *arr, int val, int n)
 
 int 
 find_peaks_and_troughs(
-		struct Data *arr, 	// signal 
+		double* arr, 	// signal 
 		int n_samples, 	// number of samples present in the signal
 		float E, 	// threshold for peak detection
 		// arrays that will store the indicies of the located
@@ -69,20 +60,20 @@ find_peaks_and_troughs(
 	while (i != n_samples) {
 		i++;
 		if (d == 0) {
-			if (arr[a].accel_x >= (arr[i].accel_x + E)) {
+			if (arr[a] >= (arr[i] + E)) {
 				d = 2;
-			} else if (arr[i].accel_x >= (arr[b].accel_x + E)) {
+			} else if (arr[i] >= (arr[b] + E)) {
 				d = 1;
 			}
-			if (arr[a].accel_x <= arr[i].accel_x) {
+			if (arr[a] <= arr[i]) {
 				a = i;
-			} else if (arr[i].accel_x <= arr[b].accel_x) {
+			} else if (arr[i] <= arr[b]) {
 				b = i;
 			}
 		} else if (d == 1) {
-			if (arr[a].accel_x <= arr[i].accel_x) {
+			if (arr[a] <= arr[i]) {
 				a = i;
-			} else if (arr[a].accel_x >= (arr[i].accel_x + E)) {
+			} else if (arr[a] >= (arr[i] + E)) {
 				/*
 				 * Peak has been detected.
 				 * Add index at detected peak
@@ -95,9 +86,9 @@ find_peaks_and_troughs(
 				d = 2;
 			}
 		} else if (d == 2) {
-			if (arr[i].accel_x <= arr[b].accel_x) {
+			if (arr[i] <= arr[b]) {
 				b = i;
-			} else if (arr[i].accel_x >= (arr[b].accel_x + E)) {
+			} else if (arr[i] >= (arr[b] + E)) {
 				/*
 				 * Trough has been detected.
 				 * Add index at detected trough
@@ -117,6 +108,28 @@ find_peaks_and_troughs(
 	return 0;
 }
 
+int find_max_min(double* data, double* time, int* maxima, int* minima, int* stride, int stride_size)
+{
+	int i, j;
+	for(i = 1; i< stride_size; i++){
+		int local_max = stride[i-1];
+		int local_min = stride[i-1];
+	
+		for(j = stride[i-1];j < stride[i]; j++){
+			if(data[j] > data[local_max] && data[j] != data[stride[i-1]]){
+				local_max = j;
+			}
+			if(data[j] < data[local_min])
+				local_min = j;
+			if(time[j] >= (time[stride[i-1]] + time[stride[i]])/2.0)
+				break;
+		}
+		maxima[i-1] = local_max;
+		minima[i-1] = local_min;
+	}
+
+	return 1;
+}
 
 
 int main(int argc, char **argv)
@@ -125,17 +138,22 @@ int main(int argc, char **argv)
 	int i, idx;
 	int rv;
 	/* Variables for reading file line by line */
-	char *ifile_name, *ofile_pt_name, *ofile_st_name, *ofile_feature_name;
+	char *ifile_name, *ofile_pt_name, *ofile_st_name, *ofile_maxmin_name, *ofile_feature_name;
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read;
 	int N_SAMPLES;
 
-	/* Variables for storing the data and storing the return values */
-	float accel_y, accel_z, gyro_x, gyro_y, gyro_z; 	// variables for data collected from input file
-	// *t, *accel_x, 
-	struct Data *data_arry;
+	// Original Data Containers
+	double* time;
+	double* accel_x;
+	double* accel_y;
+	double* accel_z;
+	double* gyro_x;
+	double* gyro_y;
+	double* gyro_z;
+
 	float pk_threshold;	// pk-threshold value
 	float time_constraint;
 
@@ -147,8 +165,8 @@ int main(int argc, char **argv)
 	int *S_i; 	// indicies of the start of each stride
 	
 	// Feature needed
-	int *peak;
-	int *trough;
+	int *maxima;
+	int *minima;
 	double* period;
 
 	int n_P; 	// number of peaks
@@ -170,17 +188,18 @@ int main(int argc, char **argv)
 	 * Or 
 	 * ./extract_stride_data
 	 */
-	if (argc != 7) {
-		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <feature output file> <threshold> <time constraints>");
+	if (argc != 8) {
+		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <maxmin output file><feature output file> <threshold> <time constraints>");
 		exit(EXIT_FAILURE);
 
 	} else {
 		ifile_name = argv[1];
 		ofile_pt_name = argv[2];
 		ofile_st_name = argv[3];
-		ofile_feature_name = argv[4];
-		pk_threshold = atof(argv[5]);
-		time_constraint = atof(argv[6]);
+		ofile_maxmin_name = argv[4];
+		ofile_feature_name = argv[5];
+		pk_threshold = atof(argv[6]);
+		time_constraint = atof(argv[7]);
 	}
 
 	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\t\n%s=%f\n",
@@ -216,11 +235,18 @@ int main(int argc, char **argv)
 	/* start reading the data from the file into the data structures */
 	i = 0;
 
-	data_arry = (struct Data *) malloc(sizeof(struct Data) * N_SAMPLES);
+	
+	time = (double*) malloc(sizeof(double) * N_SAMPLES);
+	accel_x = (double*) malloc(sizeof(double) * N_SAMPLES);
+	accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+	accel_z = (double*) malloc(sizeof(double) * N_SAMPLES);
+	gyro_x = (double*) malloc(sizeof(double) * N_SAMPLES);
+	gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+	gyro_z = (double*) malloc(sizeof(double) * N_SAMPLES);
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		/* parse the data */
-		rv = sscanf(line, "%lf,%lf,%lf,%f,%f,%f,%f,%f\n", &t1, &t2, &(data_arry[i].accel_x), &accel_y, &accel_z, &gyro_x, &gyro_y, &gyro_z);
+		rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", &t1, &t2, &accel_x[i], &accel_y[i], &accel_z[i], &gyro_x[i], &gyro_y[i], &gyro_z[i]);
 		if (rv != 8) {
 			fprintf(stderr,
 					"%s %d \'%s\'. %s.\n",
@@ -235,7 +261,7 @@ int main(int argc, char **argv)
 			start_time = t1;
 
 		//fprintf(stdout, "%20.10lf, %20.10lf\n", t1, t2);
-		data_arry[i].time = (t1 + t2)/2.0 - start_time;
+		time[i] = (t1 + t2)/2.0 - start_time;
 		i++;
 	}
 	fclose(fp);
@@ -249,16 +275,13 @@ int main(int argc, char **argv)
 	T_i = (int *) malloc(sizeof(int) * N_SAMPLES);
 	
 	rv = find_peaks_and_troughs(
-			data_arry, 
+			gyro_z, 
 			N_SAMPLES, 
 			pk_threshold, 
 			P_i, T_i, 
 			&n_P, &n_T);
 	if (rv < 0) {
 		fprintf(stderr, "find_peaks_and_troughs failed\n");
-		free(P_i);
-		free(T_i);
-		free(data_arry);
 		exit(EXIT_FAILURE);
 	}
 	P_i = (int *) realloc(P_i, sizeof(int) * n_P);
@@ -276,92 +299,37 @@ int main(int argc, char **argv)
 	/* DO NOT MODIFY ANYTHING AFTER THIS LINE */
 	printf("Attempting to sort.\n");
 	S_i = (int *) malloc(sizeof(int) * (n_P + n_T));
-	peak = (int *) malloc(sizeof(int) * (n_P));
-	trough = (int*) malloc(sizeof(int) * (n_T));
-	int peak_num = 0;
-	int trough_num = 0;
 
 	int idx_p;
-	i = 1;
-	while(i < n_P-1){
+	i = 0;
+	while(i < n_P){
 		idx_p = P_i[i];
-
 		
 		if(n_S==0){
 			S_i[n_S] = P_i[i];
-			peak[peak_num] = P_i[i];
-			peak_num++;
 			i++;
 			n_S++;
 		}
-		// if peak is far enough from previous peak/trough
-		else if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
+		// if peak is far enough from previous peak
+		if(time[idx_p] - time[S_i[n_S - 1]] >= time_constraint){
 			S_i[n_S] = P_i[i];
-			peak[peak_num] = P_i[i];
-			peak_num++;
 			i++;
 			n_S++;
 		}
-		// peak is too close to previous peak/trough, skip
+		// peak is too close to previous peak, skip
 		else
 			i++;
-		}
-		// if trough is in front of trough
-		else{
-			// 1st one is always good
-			if(n_S==0){
-				S_i[n_S] = T_i[j];
-				trough[trough_num] = T_i[j];
-				trough_num++;
-				j++;
-				n_S++;
-			}
-			// if the trough is far enough from previous peak/trough
-			else if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
-				S_i[n_S] = T_i[j];
-				trough[trough_num] = T_i[j];
-				trough_num++;
-				j++;
-				n_S++;
-			}
-			// trough is too close to previous peak/trough, skip
-			else
-				j++;
-		}
-	}
-	while(i < n_P){
-		idx_p = P_i[i];
-		// if peak is far enough from previous peak/trough, keep
-		if(data_arry[idx_p].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
-			S_i[n_S] = P_i[i];
-			peak[peak_num] = P_i[i];
-			peak_num++;
-			n_S++;
-			i++;
-		}
-		// too far from prevous peak/trough, skip
-		else
-			i++;
-	}
-	while(j < n_T){
-		idx_t = T_i[j];
-		// if trough is far enough from previous peak/trough, keep
-		if(data_arry[idx_t].time - data_arry[S_i[n_S - 1]].time >= time_constraint){
-			S_i[n_S] = T_i[j];
-			trough[trough_num] = T_i[j];
-			trough_num++;
-			n_S++;
-			j++;
-		}
-		// too far, skip
-		else
-			j++;
 	}
 
-	period = (double*) malloc(sizeof(double)*(peak_num - 1));
-	for(i = 0; i < peak_num-1; i++){
-		period[i] = data_arry[peak[i+1]].time - data_arry[peak[i]].time;
+	period = (double*) malloc(sizeof(double)*(n_S - 1));
+	for(i = 0; i < n_S-1; i++){
+		period[i] = time[S_i[i+1]] - time[S_i[i]];
 	}
+
+	maxima = (int *) malloc(sizeof(int) * (n_S));
+	minima = (int*) malloc(sizeof(int) * (n_S));
+
+	find_max_min(gyro_y, time, maxima, minima, S_i, n_S);
 
 	/* open the output file to write the peak and trough data */
 	printf("Attempting to write to file \'%s\'.\n", ofile_pt_name);
@@ -371,10 +339,6 @@ int main(int argc, char **argv)
 				"Failed to write to file \'%s\'.\n", 
 				ofile_pt_name
 		       );
-		free(P_i);
-		free(T_i);
-		free(S_i);
-		free(data_arry);
 		exit(EXIT_FAILURE);
 	}
 
@@ -384,8 +348,8 @@ int main(int argc, char **argv)
 		if (i < n_P) {
 			idx = P_i[i];
 			fprintf(fp, "%20.10lf,%lf,",
-					data_arry[idx].time,
-				data_arry[idx].accel_x);
+					time[idx],
+				gyro_z[idx]);
 		} else {
 			fprintf(fp, ",,,");
 		}
@@ -393,8 +357,8 @@ int main(int argc, char **argv)
 		if (i < n_T) {
 			idx = T_i[i];
 			fprintf(fp, "%20.10lf,%lf\n",
-					data_arry[idx].time,
-					data_arry[idx].accel_x);
+					time[idx],
+					gyro_z[idx]);
 		} else {
 			fprintf(fp, ",,\n");
 		}
@@ -409,10 +373,7 @@ int main(int argc, char **argv)
 				"Failed to write to file \'%s\'.\n", 
 				ofile_st_name
 		       );
-		free(P_i);
-		free(T_i);
-		free(S_i);
-		free(data_arry);
+
 		exit(EXIT_FAILURE);
 	}
 
@@ -420,8 +381,24 @@ int main(int argc, char **argv)
 	for (i = 0; i < n_S; i++) {
 		idx = S_i[i];
 		fprintf(fp, "%20.10lf,%lf\n",
-				data_arry[idx].time,
-				data_arry[idx].accel_x);
+				time[idx],
+				gyro_z[idx]);
+	}
+	fclose(fp);
+	
+	printf("Attempting to write to file \'%s\'.\n", ofile_maxmin_name);
+	fp = fopen(ofile_maxmin_name, "w");
+	if (fp == NULL) {
+		fprintf(stderr, 
+				"Failed to write to file \'%s\'.\n", 
+				ofile_maxmin_name
+		       );
+
+		exit(EXIT_FAILURE);
+	}
+	fprintf(fp, "T_max,Max,T_min,Min\n");
+	for(i = 0; i < n_S-1; i++){
+		fprintf(fp, "%20.10lf,%lf,%20.10lf,%lf\n", time[maxima[i]], gyro_y[maxima[i]], time[minima[i]], gyro_y[minima[i]]);
 	}
 	fclose(fp);
 
@@ -432,28 +409,15 @@ int main(int argc, char **argv)
 				"Failed to write to file \'%s\'.\n", 
 				ofile_st_name
 		       );
-		free(P_i);
-		free(T_i);
-		free(S_i);
-		free(data_arry);
-		free(peak);
-		free(trough);
-		free(period);
+
 		exit(EXIT_FAILURE);
 	}
 	fprintf(fp, "Stride_Max,Stride_Min,Period\n");
-	for(i = 0; i < peak_num-1 && i < trough_num; i++){
-		fprintf(fp, "%lf,%lf,%20.10lf\n", data_arry[peak[i]].accel_x, data_arry[trough[i]].accel_x, period[i]);
+	for(i = 0; i < n_S-1; i++){
+		fprintf(fp, "%lf,%lf,%20.10lf\n", gyro_y[maxima[i]], gyro_y[minima[i]], period[i]);
 	}
 	fclose(fp);
 
-	free(data_arry);
-	free(P_i);
-	free(T_i);
-	free(S_i);
-	free(peak);
-	free(trough);
-	free(period);
 
 	printf("extract_stride_data completed successfuly. Exiting.\n");
 

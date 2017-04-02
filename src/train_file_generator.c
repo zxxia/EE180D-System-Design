@@ -4,23 +4,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-/*******Input********/
-/* 1. Raw Data file */
-/* 2. Threshold     */
-/* 3. Pattern number*/
-/* 4. Sample number */
-/********************/
-
-/*******Output*******/
-/* Training file    */
-/********************/
-
-/****************************NOTES****************************/
-/* 	1. 	Pattern number should be the number of pattern we want
-	  	to recognize. For this moment, pattern# = 3            
-	2.	
-*/
-
 
 /* max: takes a double array and return the max val in array*/
 double max(double* array, int array_size);
@@ -48,8 +31,10 @@ int main(int argc, char **argv) {
 	int inputNeuronNum;
 	int outputNeuronNum;
 
-	double* peak;
-	double* trough;
+	double* max_accel_y;
+	double* min_accel_y;
+	double* max_gyro_y;
+	double* min_gyro_y;
 	double* period;
 	int* pattern;
 
@@ -87,14 +72,18 @@ int main(int argc, char **argv) {
 
 		// allocate arrays to hold all the data in input data file
 		if(i == 0){
-			peak = (double*) malloc(sizeof(double) * N_SAMPLES);
-			trough = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
 			period = (double*) malloc(sizeof(double) * N_SAMPLES);
 			pattern = (int*) malloc (sizeof(int) * N_SAMPLES);
 		}
 		else{
-			peak = (double*) realloc(peak, sizeof(double) * N_SAMPLES);
-			trough = (double*) realloc(trough, sizeof(double) * N_SAMPLES);
+			max_accel_y = (double*) realloc(max_accel_y, sizeof(double) * N_SAMPLES);
+			min_accel_y = (double*) realloc(min_accel_y, sizeof(double) * N_SAMPLES);
+			max_gyro_y = (double*) realloc(max_gyro_y, sizeof(double) * N_SAMPLES);
+			min_gyro_y = (double*) realloc(min_gyro_y, sizeof(double) * N_SAMPLES);
 			period = (double*) realloc(period, sizeof(double) * N_SAMPLES);
 			pattern = (int*) realloc(pattern, sizeof(int) * N_SAMPLES);
 		}
@@ -106,13 +95,9 @@ int main(int argc, char **argv) {
 			// parse the line
 			pattern[i] = j;
 
-			rv = sscanf(line, "%lf,%lf,%lf\n", &peak[i], &trough[i], &period[i]);
-			if(rv != 3){
+			rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf\n", &max_accel_y[i], &min_accel_y[i], &max_gyro_y[i], &min_gyro_y[i], &period[i]);
+			if(rv != 5){
 				fprintf(stderr, "%s %d \'%s\'. %s.\n", "Failed to read line", i, line, "Exiting");
-				free(peak);
-				free(trough);
-				free(period);
-				free(pattern);
 				exit(EXIT_FAILURE);
 			}
 			i++;
@@ -124,8 +109,10 @@ int main(int argc, char **argv) {
 
 	// normailize all numbers
 	fprintf(stdout, "Start to normalize data...\n");
-	normalize(peak, N_SAMPLES, 500.0);
-	normalize(trough, N_SAMPLES, 500.0);
+	normalize(max_accel_y, N_SAMPLES, 6.0);
+	normalize(max_accel_y, N_SAMPLES, 6.0);
+	normalize(max_gyro_y, N_SAMPLES, 500.0);
+	normalize(max_gyro_y, N_SAMPLES, 500.0);
 	normalize(period, N_SAMPLES, max(period, N_SAMPLES));
 	// normalization ends
 	fprintf(stdout, "Stop normalizing data...\n");
@@ -137,10 +124,6 @@ int main(int argc, char **argv) {
 
 	if(!fp) {
 		fprintf(stderr, "Fail to open file: test_data.txt\n");
-		free(peak);
-		free(trough);
-		free(period);
-		free(pattern);
 		exit(EXIT_FAILURE);
 	}
 	
@@ -149,21 +132,16 @@ int main(int argc, char **argv) {
 
 	//Generate Header
 	if(generateHeader(fp, N_SAMPLES, inputNeuronNum, outputNeuronNum) == 0){
-		free(peak);
-		free(trough);
-		free(period);
 		fclose(fp);
 		exit(EXIT_FAILURE);
 	}
 
 	// Write Normalized  Feature and Pattern
 	for(i = 0; i < N_SAMPLES; i++){
-		fprintf(fp, "%lf\t%lf\t%lf\n", peak[i], trough[i], period[i]);
+		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%lf\n", max_accel_y[i], min_accel_y[i], max_gyro_y[i], min_gyro_y[i],period[i]);
 		writePattern(fp, pattern[i], outputNeuronNum);
 	}
-	free(peak);
-	free(trough);
-	free(period);
+
 	fprintf(stdout, "Close %s...\n", argv[2]);
 	fclose(fp);
 	return 0;

@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 
     float max;
     fann_type *calc_out;
-    fann_type input[3];
+    fann_type input[5];
     struct fann *ann;
 
     FILE *fp;
@@ -42,8 +42,8 @@ int main(int argc, char **argv)
     while ((read = getline(&line, &len, fp)) != -1) {
         max = -100;
         /* parse the feature data*/
-        rv = sscanf(line, "%f\t%f\t%f\n", &input[0], &input[1], &input[2]);
-        if (rv != 3) {
+        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\n", &input[0], &input[1], &input[2],&input[3],&input[4]);
+        if (rv != 5) {
             fprintf(stderr,"Failed to read line2");
             exit(EXIT_FAILURE);
         }
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         /*Add this type in certain position in confusion matrix*/
         conf_matrix[answerLoc][location]++;
 
-        printf("Input values: %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], location);
+        printf("Input values: %f, %f, %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], input[3], input[4], location);
         sleep(1);
     }
 

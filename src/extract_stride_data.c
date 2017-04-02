@@ -173,8 +173,10 @@ int main(int argc, char **argv)
 	int *S_i; 	// indicies of the start of each stride
 	
 	// Feature needed
-	int *maxima;
-	int *minima;
+	int *maxima_accel_y;
+	int *minima_accel_y;
+	int *maxima_gyro_y;
+	int *minima_gyro_y;
 	double* period;
 
 	int n_P; 	// number of peaks
@@ -298,7 +300,7 @@ int main(int argc, char **argv)
 
 	// Sort peaks to filter out inappropriate values
 	printf("Attempting to sort.\n");
-	S_i = (int *) malloc(sizeof(int) * (n_P + n_T));
+	S_i = (int *) malloc(sizeof(int) * (n_P));
 
 	int idx_p;
 	i = 0;
@@ -333,10 +335,13 @@ int main(int argc, char **argv)
 
 
 	// extract maxima and minima
-	maxima = (int *) malloc(sizeof(int) * (n_S));
-	minima = (int*) malloc(sizeof(int) * (n_S));
+	maxima_accel_y = (int *) malloc(sizeof(int) * (n_S));
+	minima_accel_y = (int *) malloc(sizeof(int) * (n_S));
+	maxima_gyro_y = (int *) malloc(sizeof(int) * (n_S));
+	minima_gyro_y = (int*) malloc(sizeof(int) * (n_S));
 
-	find_max_min(gyro_y, time, maxima, minima, S_i, n_S);
+	find_max_min(gyro_y, time, maxima_gyro_y, minima_gyro_y, S_i, n_S);
+	find_max_min(accel_x, time, maxima_accel_y, minima_accel_y, S_i, n_S);
 
 	/* open the output file to write the peak and trough data */
 	printf("Attempting to write to file \'%s\'.\n", ofile_pt_name);
@@ -403,9 +408,13 @@ int main(int argc, char **argv)
 
 		exit(EXIT_FAILURE);
 	}
-	fprintf(fp, "T_max,Max,T_min,Min\n");
+	fprintf(fp, "T_max_accel_y,Max_accel_y,T_min_accel_y,Min_accel_y,T_max_gyro_y,Max_gyro_y,T_min_gyro_y,Min_gyro_y\n");
 	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%20.10lf,%lf,%20.10lf,%lf\n", time[maxima[i]], gyro_y[maxima[i]], time[minima[i]], gyro_y[minima[i]]);
+		fprintf(fp, "%20.10lf,%lf,%20.10lf,%lf,%20.10lf,%lf,%20.10lf,%lf\n", 
+			time[maxima_accel_y[i]], accel_y[maxima_accel_y[i]], 
+			time[minima_accel_y[i]], accel_y[minima_accel_y[i]],
+			time[maxima_gyro_y[i]], gyro_y[maxima_gyro_y[i]], 
+			time[minima_gyro_y[i]], gyro_y[minima_gyro_y[i]]);
 	}
 	fclose(fp);
 
@@ -419,9 +428,9 @@ int main(int argc, char **argv)
 
 		exit(EXIT_FAILURE);
 	}
-	fprintf(fp, "Stride_Max,Stride_Min,Period\n");
+	fprintf(fp, "Max_accel_y,Min_accel_y,Max_gyro_y,Min_gyro_y,Period\n");
 	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%lf,%lf,%20.10lf\n", gyro_y[maxima[i]], gyro_y[minima[i]], period[i]);
+		fprintf(fp, "%lf,%lf,%lf,%lf,%20.10lf\n", accel_x[maxima_accel_y[i]], accel_x[minima_accel_y[i]], gyro_y[maxima_gyro_y[i]], gyro_y[minima_gyro_y[i]], period[i]);
 	}
 	fclose(fp);
 

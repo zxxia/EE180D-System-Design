@@ -23,9 +23,9 @@ void clear_buffer(int *arr, int val, int n)
 /*
  * Caculates mean of first <n> samples in <*arr>
  */
-/*float calculate_mean(float *arr, int n)
+double calculate_mean(double *arr, int n)
 {
-	float total;
+	double total;
 	int i;
 
 	total = 0.0f;
@@ -33,8 +33,8 @@ void clear_buffer(int *arr, int val, int n)
 		total += arr[i];
 	}
 
-	return total/((float) n);
-}*/
+	return total/((double) n);
+}
 
 int 
 find_peaks_and_troughs(
@@ -108,29 +108,6 @@ find_peaks_and_troughs(
 	return 0;
 }
 
-int find_max_min(double* data, double* time, int* maxima, int* minima, int* stride, int stride_size)
-{
-	int i, j;
-	for(i = 1; i< stride_size; i++){
-		int local_max = stride[i-1];
-		int local_min = stride[i-1];
-	
-		for(j = stride[i-1];j < stride[i]; j++){
-			if(data[j] > data[local_max] && data[j] != data[stride[i-1]]){
-				local_max = j;
-			}
-			if(data[j] < data[local_min])
-				local_min = j;
-			if(time[j] >= (time[stride[i-1]] + time[stride[i]])/2.0)
-				break;
-		}
-		maxima[i-1] = local_max;
-		minima[i-1] = local_min;
-	}
-
-	return 1;
-}
-
 
 int main(int argc, char **argv)
 {
@@ -144,8 +121,7 @@ int main(int argc, char **argv)
 	/*output file names*/
 	char* ofile_pt_name; // peak&trough file
 	char* ofile_st_name; // stride detection file
-	char* ofile_maxmin_name; // feature maxmin file(t, max, t, min)
-	char *ofile_feature_name; // feature file(max min period)
+
 	
 	FILE *fp;
 	char *line = NULL;
@@ -171,17 +147,13 @@ int main(int argc, char **argv)
 	int *P_i; 	// indicies of each peak found by peak detection
 	int *T_i; 	// indicies of each trough found by trough detection
 	int *S_i; 	// indicies of the start of each stride
-	
-	// Feature needed
-	int *maxima_accel_y;
-	int *minima_accel_y;
-	int *maxima_gyro_y;
-	int *minima_gyro_y;
-	double* period;
 
 	int n_P; 	// number of peaks
 	int n_T; 	// number of troughs
 	int n_S; 	// number of strides
+
+	double* temp;
+	double mean;
 
 	/*
 	 * set this to 0 so that the code can function without
@@ -197,18 +169,16 @@ int main(int argc, char **argv)
 	 * 				<output feature file> <threshold_value_float> <time constraint>
 	 * 
 	 */
-	if (argc != 8) {
-		fprintf(stderr, "USEAGE: ./extract_stride_data <input file> <peak trough detection output file> <stride detection output file> <maxmin output file> <feature output file> <threshold> <time constraints>");
+	if (argc != 6) {
+		fprintf(stderr, "USEAGE: ./stride_detector <input data file> <peak trough detection output file> <stride detection output file> <threshold> <time constraints>");
 		exit(EXIT_FAILURE);
 
 	} else {
 		ifile_name = argv[1];
 		ofile_pt_name = argv[2];
 		ofile_st_name = argv[3];
-		ofile_maxmin_name = argv[4];
-		ofile_feature_name = argv[5];
-		pk_threshold = atof(argv[6]);
-		time_constraint = atof(argv[7]);
+		pk_threshold = atof(argv[4]);
+		time_constraint = atof(argv[5]);
 	}
 
 	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\t\n%s=%f\n",
@@ -298,50 +268,52 @@ int main(int argc, char **argv)
 	T_i = (int *) realloc(T_i, sizeof(int) * n_T);
 
 
-	// Sort peaks to filter out inappropriate values
-	printf("Attempting to sort.\n");
-	S_i = (int *) malloc(sizeof(int) * (n_P));
+	// Filter troughs to filter out inappropriate values
+	printf("Attempting to filter troughs.\n");
+	S_i = (int *) malloc(sizeof(int) * n_T);
+	temp = (double *)malloc(sizeof(double) * n_T);
 
-	int idx_p;
+	// Load all trough values into temp
+	for(i = 0; i < n_T; i++){
+		temp[i] = gyro_z[T_i[i]];
+	}
+
+	mean = calculate_mean(temp, n_T);
+
+	for(i = 0; i < n_T; i++){
+		if(gyro_z[T_i[i]] < mean){
+			S_i[n_S] = T_i[i];
+			n_S++;
+		}
+	}
+
+
+
+
+
+	/*int idx_t;
 	i = 0;
-	while(i < n_P){
-		idx_p = P_i[i];
+	while(i < n_T){
+		idx_t = T_i[i];
 		
 		if(n_S==0){
-			S_i[n_S] = P_i[i];
+			S_i[n_S] = T_i[i];
 			i++;
 			n_S++;
 		}
-		// if peak is far enough from previous peak
-		if(time[idx_p] - time[S_i[n_S - 1]] >= time_constraint){
-			S_i[n_S] = P_i[i];
+		// if a trough is far enough from previous trough
+		if(time[idx_t] - time[S_i[n_S - 1]] >= time_constraint){
+			S_i[n_S] = T_i[i];
 			i++;
 			n_S++;
 		}
-		// peak is too close to previous peak, skip
+		// a trough is too close to previous trough, skip it.
 		else
 			i++;
-	}
+	}*/
 
 
 
-	/* feature detection section*/
-	// compute period
-	period = (double*) malloc(sizeof(double)*(n_S - 1));
-	for(i = 0; i < n_S-1; i++){
-		period[i] = time[S_i[i+1]] - time[S_i[i]];
-	}
-
-
-
-	// extract maxima and minima
-	maxima_accel_y = (int *) malloc(sizeof(int) * (n_S));
-	minima_accel_y = (int *) malloc(sizeof(int) * (n_S));
-	maxima_gyro_y = (int *) malloc(sizeof(int) * (n_S));
-	minima_gyro_y = (int*) malloc(sizeof(int) * (n_S));
-
-	find_max_min(gyro_y, time, maxima_gyro_y, minima_gyro_y, S_i, n_S);
-	find_max_min(accel_x, time, maxima_accel_y, minima_accel_y, S_i, n_S);
 
 	/* open the output file to write the peak and trough data */
 	printf("Attempting to write to file \'%s\'.\n", ofile_pt_name);
@@ -377,6 +349,7 @@ int main(int argc, char **argv)
 	}
 	fclose(fp);
 
+
 	/* open the output file to write the stride data */
 	printf("Attempting to write to file \'%s\'.\n", ofile_st_name);
 	fp = fopen(ofile_st_name, "w");
@@ -389,53 +362,19 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(fp, "S_t,S_x\n");
+	fprintf(fp, "S_i,S_t,S_x\n");
 	for (i = 0; i < n_S; i++) {
 		idx = S_i[i];
-		fprintf(fp, "%20.10lf,%lf\n",
+		fprintf(fp, "%d,%20.10lf,%lf\n",
+				idx,
 				time[idx],
 				gyro_z[idx]);
 	}
 	fclose(fp);
 	
-	printf("Attempting to write to file \'%s\'.\n", ofile_maxmin_name);
-	fp = fopen(ofile_maxmin_name, "w");
-	if (fp == NULL) {
-		fprintf(stderr, 
-				"Failed to write to file \'%s\'.\n", 
-				ofile_maxmin_name
-		       );
-
-		exit(EXIT_FAILURE);
-	}
-	fprintf(fp, "T_max_accel_y,Max_accel_y,T_min_accel_y,Min_accel_y,T_max_gyro_y,Max_gyro_y,T_min_gyro_y,Min_gyro_y\n");
-	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%20.10lf,%lf,%20.10lf,%lf,%20.10lf,%lf,%20.10lf,%lf\n", 
-			time[maxima_accel_y[i]], accel_y[maxima_accel_y[i]], 
-			time[minima_accel_y[i]], accel_y[minima_accel_y[i]],
-			time[maxima_gyro_y[i]], gyro_y[maxima_gyro_y[i]], 
-			time[minima_gyro_y[i]], gyro_y[minima_gyro_y[i]]);
-	}
-	fclose(fp);
-
-	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
-	fp = fopen(ofile_feature_name, "w");
-	if (fp == NULL) {
-		fprintf(stderr, 
-				"Failed to write to file \'%s\'.\n", 
-				ofile_st_name
-		       );
-
-		exit(EXIT_FAILURE);
-	}
-	fprintf(fp, "Max_accel_y,Min_accel_y,Max_gyro_y,Min_gyro_y,Period\n");
-	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%lf,%lf,%lf,%lf,%20.10lf\n", accel_x[maxima_accel_y[i]], accel_x[minima_accel_y[i]], gyro_y[maxima_gyro_y[i]], gyro_y[minima_gyro_y[i]], period[i]);
-	}
-	fclose(fp);
 
 
-	printf("extract_stride_data completed successfuly. Exiting.\n");
+	printf("stride_detector completed successfuly. Exiting.\n");
 
 	return 0;
 }

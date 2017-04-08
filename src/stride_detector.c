@@ -139,7 +139,6 @@ int main(int argc, char **argv)
 	double* gyro_z;
 
 	float pk_threshold;
-	float time_constraint;
 
 	double t1, t2; // variable used to parse time_before and time_after
 	double start_time; // variable used to computer sampling time
@@ -169,8 +168,8 @@ int main(int argc, char **argv)
 	 * 				<output feature file> <threshold_value_float> <time constraint>
 	 * 
 	 */
-	if (argc != 6) {
-		fprintf(stderr, "USEAGE: ./stride_detector <input data file> <peak trough detection output file> <stride detection output file> <threshold> <time constraints>");
+	if (argc != 5) {
+		fprintf(stderr, "USEAGE: ./stride_detector <input data file> <peak trough detection output file> <stride detection output file> <threshold>\n");
 		exit(EXIT_FAILURE);
 
 	} else {
@@ -178,15 +177,13 @@ int main(int argc, char **argv)
 		ofile_pt_name = argv[2];
 		ofile_st_name = argv[3];
 		pk_threshold = atof(argv[4]);
-		time_constraint = atof(argv[5]);
 	}
 
-	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\t\n%s=%f\n",
+	printf("Arguments used:\n\t%s=%s\n\t%s=%s\n\t%s=%s\n\t%s=%f\n",
 			"ifile_name", ifile_name,
 			"ofile_peak_trough_name", ofile_pt_name,
 			"ofile_stride_name", ofile_st_name,
-			"peak_threshold", pk_threshold,
-			"time_contraint", time_constraint
+			"peak_threshold", pk_threshold
 	      );
 
 	/* open the input file */

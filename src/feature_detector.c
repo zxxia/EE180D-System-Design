@@ -7,28 +7,71 @@
 /* for fabsf() */
 #include <math.h>
 
-int find_max_min(double* data, double* time, int* maxima, int* minima, int* stride, int stride_size)
+struct Feature{
+	// segmentaion 0
+	double seg0_max;
+	double seg0_min;
+
+	// segmentation 1
+	double seg1_max;
+	double seg1_min;
+
+	// segmentation 2
+	double seg2_max;
+	double seg2_min;
+
+	// segmentation 3
+	double seg3_max;
+	double seg3_min;
+};
+
+void find_max_min(double* data, int start_pos, int end_pos, double* max, double* min)
 {
-	int i, j;
-	for(i = 1; i< stride_size; i++){
-		int local_max = stride[i-1];
-		int local_min = stride[i-1];
+	int i;
+	*max = data[start_pos];
+	*min = data[start_pos];
+	for(i = start_pos; i < end_pos; i++){
+		if(data[i] > *max)
+			*max = data[i];
+		if(data[i] < *min)
+			*min = data[i];
+	}
+}
+
+// Divide the stride into 4 segmentations
+// Extract max min on each segmentation
+
+struct Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
+{
+	int i;
+	struct Feature *features = (struct Feature*) malloc(sizeof(struct Feature) * n_S-1);
 	
-		for(j = stride[i-1];j < stride[i]; j++){
-			if(data[j] > data[local_max] && data[j] != data[stride[i-1]]){
-				local_max = j;
-			}
-			if(data[j] < data[local_min])
-				local_min = j;
-			if(time[j] >= (time[stride[i-1]] + time[stride[i]])/2.0)
-				break;
-		}
-		maxima[i-1] = local_max;
-		minima[i-1] = local_min;
+	for(i = 0; i< n_S-1; i++){
+
+		// Segmentation
+		float step = (float)(S_i[i+1] - S_i[i]);
+		int pos0 = S_i[i];
+		int pos1 = S_i[i] + (int)(step / 4.0);
+		int pos2 = S_i[i] + (int)(step / 2.0);
+		int pos3 = S_i[i] + (int)(3.0 * step / 4.0);
+		int pos4 = S_i[i+1];
+
+		find_max_min(data, pos0, pos1, &features[i].seg0_max, &features[i].seg0_min);
+
+		//Add seg max/min + period to array
+		find_max_min(data, pos1, pos2, &features[i].seg1_max, &features[i].seg1_min);
+		//Add seg max/min + period to array
+		find_max_min(data, pos2, pos3, &features[i].seg2_max, &features[i].seg2_min);
+		//Add seg max/min + period to array
+		find_max_min(data, pos3, pos4, &features[i].seg3_max, &features[i].seg3_min);
+		//Add seg max/min + period to array
 	}
 
-	return 1;
+	return features;
+
 }
+
+
 
 
 int main(int argc, char **argv)
@@ -71,6 +114,7 @@ int main(int argc, char **argv)
 	double *S_val; // value of gyro_z of the start of each stride
 
 	// Feature needed
+	struct Feature* features;
 	/*int *maxima_accel_y;
 	int *minima_accel_y;
 	int *maxima_gyro_y;
@@ -82,7 +126,7 @@ int main(int argc, char **argv)
 	 * Check if the user entered the correct command line arguments
 	 */
 	if (argc != 5) {
-		fprintf(stderr, "USEAGE: ./feature_detector <input data file> <input stride file> <output maxmin file> <output feature file>");
+		fprintf(stderr, "USEAGE: ./feature_detector <input data file> <input stride file> <output maxmin file> <output feature file>\n");
 		exit(EXIT_FAILURE);
 
 	} else {
@@ -214,6 +258,28 @@ int main(int argc, char **argv)
 		period[i] = time[S_i[i+1]] - time[S_i[i]];
 	}
 
+	//2 indices divided by 4 
+	features = extract_feature(gyro_y, time, S_i, n_S);
+
+	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
+	fp = fopen(ofile_feature_name, "w");
+	if (fp == NULL) {
+		fprintf(stderr, 
+				"Failed to write to file \'%s\'.\n", 
+				ofile_feature_name
+		       );
+		exit(EXIT_FAILURE);
+	}
+	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
+	for(i = 0; i < n_S-1; i++){
+		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n", 
+			features[i].seg0_max, features[i].seg0_min, 
+			features[i].seg1_max, features[i].seg1_min,
+			features[i].seg2_max, features[i].seg2_min,
+			features[i].seg3_max, features[i].seg3_min,
+			period[i]);
+	}
+	fclose(fp);
 
 
 

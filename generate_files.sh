@@ -27,28 +27,34 @@ echo "Feature detection on stairing data files..."
 
 ./feature_detector $DATA_DIR/stair3.csv $OUTPUT_DIR/stair3_st.csv $OUTPUT_DIR/stair3_maxmin.csv $OUTPUT_DIR/stair3_feature.csv
 
-# cat assign10_results/feature_stair1.csv > assign10_results/feature_stair.csv
-# tail -n +2 assign10_results/feature_stair2.csv >> assign10_results/feature_stair.csv
-# tail -n +2 assign10_results/feature_stair3.csv >> assign10_results/feature_stair.csv
+ cat $OUTPUT_DIR/stair1_feature.csv > $OUTPUT_DIR/stair_feature.csv
+ tail -n +2 $OUTPUT_DIR/stair2_feature.csv >> $OUTPUT_DIR/stair_feature.csv
+ tail -n +2 $OUTPUT_DIR/stair3_feature.csv >> $OUTPUT_DIR/stair_feature.csv
 
-# printf "\n"
-# ./stride_detector data_assign10/turn_test.csv assign10_results/turn_test_pt.csv assign10_results/stride_turn_test.csv assign10_results/maxmin_turn_test.csv assign10_results/feature_turn_test.csv 50.0 0.07
+ printf "\n"
+./stride_detector $DATA_DIR/turn_test.csv $OUTPUT_DIR/turn_test_pt.csv $OUTPUT_DIR/turn_test_st.csv 50.0
 
-# ./stride_detector data_assign10/walk_fast_test.csv assign10_results/walk_test_pt.csv assign10_results/stride_walk_test.csv assign10_results/maxmin_walk_test.csv assign10_results/feature_walk_test.csv 50.0 0.07
+./stride_detector $DATA_DIR/walk_test.csv $OUTPUT_DIR/walk_test_pt.csv $OUTPUT_DIR/walk_test_st.csv 50.0
 
-# ./stride_detector data_assign10/stair_test.csv assign10_results/stair_test_pt.csv assign10_results/stride_stair_test.csv assign10_results/maxmin_stair_test.csv assign10_results/feature_stair_test.csv 50.0 0.07
+./stride_detector $DATA_DIR/stair_test.csv $OUTPUT_DIR/stair_test_pt.csv $OUTPUT_DIR/stair_test_st.csv 50.0
 
+./feature_detector $DATA_DIR/turn_test.csv $OUTPUT_DIR/turn_test_st.csv $OUTPUT_DIR/turn_test_maxmin.csv $OUTPUT_DIR/turn_test_feature.csv
 
+./feature_detector $DATA_DIR/walk_test.csv $OUTPUT_DIR/walk_test_st.csv $OUTPUT_DIR/walk_test_maxmin.csv $OUTPUT_DIR/walk_test_feature.csv
 
-# printf "\n"
-
-# echo "Generate train files..."
-# ./train_file_generator assign10_results/feature_turn.csv assign10_results/feature_walk.csv assign10_results/feature_stair.csv train_file_dir/train.txt 5 3
-
+./feature_detector $DATA_DIR/stair_test.csv $OUTPUT_DIR/stair_test_st.csv $OUTPUT_DIR/stair_test_maxmin.csv $OUTPUT_DIR/stair_test_feature.csv
 
 
-# echo "Generate test files..."
-# ./train_file_generator assign10_results/feature_turn_test.csv assign10_results/feature_walk_test.csv assign10_results/feature_stair_test.csv train_file_dir/train_test.txt 5 3
+
+printf "\n"
+
+echo "Generate train files..."
+./train_file_generator $OUTPUT_DIR/turn_feature.csv $OUTPUT_DIR/walk_feature.csv $OUTPUT_DIR/stair_feature.csv train_file_dir/train_yiran.txt 17 3
+
+
+
+echo "Generate test files..."
+./train_file_generator $OUTPUT_DIR/turn_test_feature.csv $OUTPUT_DIR/walk_test_feature.csv $OUTPUT_DIR/stair_test_feature.csv train_file_dir/test_yiran.txt 17 3
 
 
 

@@ -21,7 +21,6 @@ int main(int argc, char **argv) {
 	int rv;
 
 
-
 	ssize_t read; // number of lines read
 	char *line = NULL;
 	size_t len = 0;
@@ -31,10 +30,23 @@ int main(int argc, char **argv) {
 	int inputNeuronNum;
 	int outputNeuronNum;
 
-	double* max_accel_y;
-	double* min_accel_y;
-	double* max_gyro_y;
-	double* min_gyro_y;
+	double* max_accel_y_seg0;
+	double* min_accel_y_seg0;
+	double* max_accel_y_seg1;
+	double* min_accel_y_seg1;
+	double* max_accel_y_seg2;
+	double* min_accel_y_seg2;
+	double* max_accel_y_seg3;
+	double* min_accel_y_seg3;
+
+	double* max_gyro_y_seg0;
+	double* min_gyro_y_seg0;
+	double* max_gyro_y_seg1;
+	double* min_gyro_y_seg1;
+	double* max_gyro_y_seg2;
+	double* min_gyro_y_seg2;
+	double* max_gyro_y_seg3;
+	double* min_gyro_y_seg3;
 	double* period;
 	int* pattern;
 
@@ -72,18 +84,44 @@ int main(int argc, char **argv) {
 
 		// allocate arrays to hold all the data in input data file
 		if(i == 0){
-			max_accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
-			min_accel_y = (double*) malloc(sizeof(double) * N_SAMPLES);
-			max_gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
-			min_gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_accel_y_seg0 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_accel_y_seg0 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_accel_y_seg1 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_accel_y_seg1 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_accel_y_seg2 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_accel_y_seg2 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_accel_y_seg3 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_accel_y_seg3 = (double*) malloc(sizeof(double) * N_SAMPLES);
+
+			max_gyro_y_seg0 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg0 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg1 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg1 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg2 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg2 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg3 = (double*) malloc(sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg3 = (double*) malloc(sizeof(double) * N_SAMPLES);
 			period = (double*) malloc(sizeof(double) * N_SAMPLES);
 			pattern = (int*) malloc (sizeof(int) * N_SAMPLES);
 		}
 		else{
-			max_accel_y = (double*) realloc(max_accel_y, sizeof(double) * N_SAMPLES);
-			min_accel_y = (double*) realloc(min_accel_y, sizeof(double) * N_SAMPLES);
-			max_gyro_y = (double*) realloc(max_gyro_y, sizeof(double) * N_SAMPLES);
-			min_gyro_y = (double*) realloc(min_gyro_y, sizeof(double) * N_SAMPLES);
+			max_accel_y_seg0 = (double*) realloc(max_accel_y_seg0, sizeof(double) * N_SAMPLES);
+			min_accel_y_seg0 = (double*) realloc(min_accel_y_seg0, sizeof(double) * N_SAMPLES);
+			max_accel_y_seg1 = (double*) realloc(max_accel_y_seg1, sizeof(double) * N_SAMPLES);
+			min_accel_y_seg1 = (double*) realloc(min_accel_y_seg1, sizeof(double) * N_SAMPLES);
+			max_accel_y_seg2 = (double*) realloc(max_accel_y_seg2, sizeof(double) * N_SAMPLES);
+			min_accel_y_seg2 = (double*) realloc(min_accel_y_seg2, sizeof(double) * N_SAMPLES);
+			max_accel_y_seg3 = (double*) realloc(max_accel_y_seg3, sizeof(double) * N_SAMPLES);
+			min_accel_y_seg3 = (double*) realloc(min_accel_y_seg3, sizeof(double) * N_SAMPLES);
+			
+			max_gyro_y_seg0 = (double*) realloc(max_gyro_y_seg0, sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg0 = (double*) realloc(min_gyro_y_seg0, sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg1 = (double*) realloc(max_gyro_y_seg1, sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg1 = (double*) realloc(min_gyro_y_seg1, sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg2 = (double*) realloc(max_gyro_y_seg2, sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg2 = (double*) realloc(min_gyro_y_seg2, sizeof(double) * N_SAMPLES);
+			max_gyro_y_seg3 = (double*) realloc(max_gyro_y_seg3, sizeof(double) * N_SAMPLES);
+			min_gyro_y_seg3 = (double*) realloc(min_gyro_y_seg3, sizeof(double) * N_SAMPLES);
 			period = (double*) realloc(period, sizeof(double) * N_SAMPLES);
 			pattern = (int*) realloc(pattern, sizeof(int) * N_SAMPLES);
 		}
@@ -95,8 +133,19 @@ int main(int argc, char **argv) {
 			// parse the line
 			pattern[i] = j;
 
-			rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf\n", &max_accel_y[i], &min_accel_y[i], &max_gyro_y[i], &min_gyro_y[i], &period[i]);
-			if(rv != 5){
+			//rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf\n", &max_accel_y[i], &min_accel_y[i], &max_gyro_y[i], &min_gyro_y[i], &period[i]);
+			rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", 
+				&max_accel_y_seg0[i], &min_accel_y_seg0[i],
+				&max_accel_y_seg1[i], &min_accel_y_seg1[i],
+				&max_accel_y_seg2[i], &min_accel_y_seg2[i],
+				&max_accel_y_seg3[i], &min_accel_y_seg3[i],
+				&max_gyro_y_seg0[i], &min_gyro_y_seg0[i], 
+				&max_gyro_y_seg1[i], &min_gyro_y_seg1[i], 
+				&max_gyro_y_seg2[i], &min_gyro_y_seg2[i],
+				&max_gyro_y_seg3[i], &min_gyro_y_seg3[i],
+				&period[i]);
+			
+			if(rv != 17){
 				fprintf(stderr, "%s %d \'%s\'. %s.\n", "Failed to read line", i, line, "Exiting");
 				exit(EXIT_FAILURE);
 			}
@@ -109,10 +158,23 @@ int main(int argc, char **argv) {
 
 	// normailize all numbers
 	fprintf(stdout, "Start to normalize data...\n");
-	normalize(max_accel_y, N_SAMPLES, 6.0);
-	normalize(max_accel_y, N_SAMPLES, 6.0);
-	normalize(max_gyro_y, N_SAMPLES, 500.0);
-	normalize(max_gyro_y, N_SAMPLES, 500.0);
+	normalize(max_accel_y_seg0, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg0, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg1, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg1, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg2, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg2, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg3, N_SAMPLES, 6.0);
+	normalize(max_accel_y_seg3, N_SAMPLES, 6.0);
+
+	normalize(max_gyro_y_seg0, N_SAMPLES, 500.0);
+	normalize(min_gyro_y_seg0, N_SAMPLES, 500.0);
+	normalize(max_gyro_y_seg1, N_SAMPLES, 500.0);
+	normalize(min_gyro_y_seg1, N_SAMPLES, 500.0);
+	normalize(max_gyro_y_seg2, N_SAMPLES, 500.0);
+	normalize(min_gyro_y_seg2, N_SAMPLES, 500.0);
+	normalize(max_gyro_y_seg3, N_SAMPLES, 500.0);
+	normalize(min_gyro_y_seg3, N_SAMPLES, 500.0);
 	normalize(period, N_SAMPLES, max(period, N_SAMPLES));
 	// normalization ends
 	fprintf(stdout, "Stop normalizing data...\n");
@@ -138,7 +200,17 @@ int main(int argc, char **argv) {
 
 	// Write Normalized  Feature and Pattern
 	for(i = 0; i < N_SAMPLES; i++){
-		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%lf\n", max_accel_y[i], min_accel_y[i], max_gyro_y[i], min_gyro_y[i],period[i]);
+		//fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%lf\n", max_accel_y[i], min_accel_y[i], max_gyro_y[i], min_gyro_y[i],period[i]);
+		fprintf(fp, "%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n", 
+			max_accel_y_seg0[i], min_accel_y_seg0[i],
+			max_accel_y_seg1[i], min_accel_y_seg1[i],
+			max_accel_y_seg2[i], min_accel_y_seg2[i],
+			max_accel_y_seg3[i], min_accel_y_seg3[i],
+			max_gyro_y_seg0[i], min_gyro_y_seg0[i],
+			max_gyro_y_seg1[i], min_gyro_y_seg1[i],
+			max_gyro_y_seg2[i], min_gyro_y_seg2[i],
+			max_gyro_y_seg3[i], min_gyro_y_seg3[i],
+			period[i]);
 		writePattern(fp, pattern[i], outputNeuronNum);
 	}
 

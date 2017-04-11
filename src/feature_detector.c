@@ -11,20 +11,37 @@ struct Feature{
 	// segmentaion 0
 	double seg0_max;
 	double seg0_min;
+	double seg0_mean;
+	double seg0_var;
+	double seg0_rms;
+	double seg0_mad;
 
 	// segmentation 1
 	double seg1_max;
 	double seg1_min;
+	double seg1_mean;
+	double seg1_var;
+	double seg1_rms;
+	double seg1_mad;
 
 	// segmentation 2
 	double seg2_max;
 	double seg2_min;
+	double seg2_mean;
+	double seg2_var;
+	double seg2_rms;
+	double seg2_mad;
 
 	// segmentation 3
 	double seg3_max;
 	double seg3_min;
+	double seg3_mean;
+	double seg3_var;
+	double seg3_rms;
+	double seg3_mad;
 };
 
+//Max-min feature
 void find_max_min(double* data, int start_pos, int end_pos, double* max, double* min)
 {
 	int i;
@@ -38,9 +55,72 @@ void find_max_min(double* data, int start_pos, int end_pos, double* max, double*
 	}
 }
 
+//Mean
+void find_mean(double* data, int start_pos, int end_pos, double* mean)
+{
+	int i;
+	int totalPos = end_pos - start_pos;
+	double sum = 0;
+	for(i = start_pos; i < end_pos; i++) {
+		sum = sum + data[i];
+	}
+	*mean = sum / (double)totalPos;
+}
+
+//Variance feature
+void find_variance(double* data, int start_pos, int end_pos, double* var)
+{
+	int i;
+	int totalPos = end_pos - start_pos;
+	double mean, sum = 0;
+	find_mean(data, start_pos, end_pos, &mean);
+	for(i = start_pos; i < end_pos; i++) {
+		sum = sum + pow((data[i] - mean), 2);
+	}
+	*var = sum / (double)totalPos;
+}
+
+//STD
+void  find_std(double* data, int start_pos, int end_pos, double* std)
+{
+	double var;
+	find_variance(data, start_pos, end_pos, &var);
+	*std = sqrt(var);
+}
+
+//RMS
+void find_rms(double* data, int start_pos, int end_pos, double* rms)
+{
+	int i;
+	int totalPos = end_pos - start_pos;
+	double sum = 0;
+	for(i = start_pos; i < end_pos; i++) {
+		sum = sum + pow(data[i], 2);
+	}
+	*rms = pow((sum / (double)totalPos), 0.5);
+}
+
+//MAD
+void find_mad(double* data, int start_pos, int end_pos, double* mad)
+{
+	int i;
+	int totalPos = end_pos - start_pos;
+	double mean, sum = 0;
+	find_mean(data, start_pos, end_pos, &mean);
+	for (i = start_pos; i < end_pos; i++) {
+		sum = sum + fabs(data[i] - mean);
+	}
+	*mad = sum / (double)totalPos;
+}
+
+//Max-min ratio
+
+//Skewness?????Not a good one????
+//Kurtosis?????Consider for later
+//Correlation??????????
+
 // Divide the stride into 4 segmentations
 // Extract max min on each segmentation
-
 struct Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 {
 	int i;
@@ -56,8 +136,8 @@ struct Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		int pos3 = S_i[i] + (int)(3.0 * step / 4.0);
 		int pos4 = S_i[i+1];
 
+		
 		find_max_min(data, pos0, pos1, &features[i].seg0_max, &features[i].seg0_min);
-
 		//Add seg max/min + period to array
 		find_max_min(data, pos1, pos2, &features[i].seg1_max, &features[i].seg1_min);
 		//Add seg max/min + period to array
@@ -65,10 +145,16 @@ struct Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		//Add seg max/min + period to array
 		find_max_min(data, pos3, pos4, &features[i].seg3_max, &features[i].seg3_min);
 		//Add seg max/min + period to array
+		
+		/*
+		find_variance(data, pos0, pos1, &features[i].seg0_var);
+		find_variance(data, pos1, pos2, &features[i].seg1_var);
+		find_variance(data, pos2, pos3, &features[i].seg2_var);
+		find_variance(data, pos3, pos4, &features[i].seg3_var);
+		*/
 	}
 
 	return features;
-
 }
 
 
@@ -114,7 +200,8 @@ int main(int argc, char **argv)
 	double *S_val; // value of gyro_z of the start of each stride
 
 	// Feature needed
-	struct Feature* features;
+	struct Feature* features0;
+	struct Feature* features1;
 	/*int *maxima_accel_y;
 	int *minima_accel_y;
 	int *maxima_gyro_y;
@@ -259,7 +346,8 @@ int main(int argc, char **argv)
 	}
 
 	//2 indices divided by 4 
-	features = extract_feature(gyro_y, time, S_i, n_S);
+	features1 = extract_feature(gyro_y, time, S_i, n_S);
+	features0 = extract_feature(accel_y, time, S_i, n_S);
 
 	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
 	fp = fopen(ofile_feature_name, "w");
@@ -268,17 +356,25 @@ int main(int argc, char **argv)
 				"Failed to write to file \'%s\'.\n", 
 				ofile_feature_name
 		       );
-		exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE); 
 	}
+
 	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
 	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n", 
-			features[i].seg0_max, features[i].seg0_min, 
-			features[i].seg1_max, features[i].seg1_min,
-			features[i].seg2_max, features[i].seg2_min,
-			features[i].seg3_max, features[i].seg3_min,
+		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
+		 	features0[i].seg0_max, features0[i].seg0_min, 
+			features0[i].seg1_max, features0[i].seg1_min,
+			features0[i].seg2_max, features0[i].seg2_min,
+			features0[i].seg3_max, features0[i].seg3_min,
+			features1[i].seg0_max, features1[i].seg0_min, 
+			features1[i].seg1_max, features1[i].seg1_min,
+			features1[i].seg2_max, features1[i].seg2_min,
+			features1[i].seg3_max, features1[i].seg3_min,
 			period[i]);
 	}
+
+
+
 	fclose(fp);
 
 

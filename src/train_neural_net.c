@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv)
 {
-    const unsigned int num_input = 5;
+    const unsigned int num_input = 17;
     const unsigned int num_output = 3;
     const unsigned int num_layers = 3;
     const unsigned int num_neurons_hidden = 3;

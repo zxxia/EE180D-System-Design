@@ -51,15 +51,15 @@ int main(int argc, char **argv) {
 	int* pattern;
 
 	//Initialization
-	if(argc != 7) {
-		fprintf(stderr, "Usage: ./%s <input data file 0> <input data file 1> <input data file 2> <output train file> <input neuron num> <output neuron num>\n",
+	if(argc != 9) {
+		fprintf(stderr, "Usage: ./%s <input data file> <input data file 1> <input data file 2> <output train file> <input neuron num> <output neuron num>\n",
 				argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
 	inputNeuronNum = atoi(argv[argc-2]);
 	outputNeuronNum = atoi(argv[argc-1]);
-	outputFileName = argv[4];
+	outputFileName = argv[argc-3];
 
 
 	// Open each input feature file and combine them into one train file

@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	 * 
 	 */
 	if (argc != 7) {
-		fprintf(stderr, "USEAGE: ./stride_detector <input data file> <output peak trough detection file> <output stride detection file> <output maxmin file> <output feature file> <threshold>\n");
+		fprintf(stderr, "USEAGE: ./main <input data file> <output peak trough detection file> <output stride detection file> <output maxmin file> <output feature file> <threshold>\n");
 		exit(EXIT_FAILURE);
 
 	} else {
@@ -175,19 +175,19 @@ int main(int argc, char **argv)
 
 	// Filter troughs to filter out inappropriate values
 	printf("Attempting to filter troughs.\n");
-	S_i = (int *) malloc(sizeof(int) * n_T);
-	temp = (double *)malloc(sizeof(double) * n_T);
+	S_i = (int *) malloc(sizeof(int) * n_P);
+	temp = (double *)malloc(sizeof(double) * n_P);
 
 	// Load all trough values into temp
-	for(i = 0; i < n_T; i++){
-		temp[i] = gyro_z[T_i[i]];
+	for(i = 0; i < n_P; i++){
+		temp[i] = gyro_z[P_i[i]];
 	}
 
-	mean(temp, 0, n_T, &mean_val);
+	mean(temp, 0, n_P, &mean_val);
 
-	for(i = 0; i < n_T; i++){
-		if(gyro_z[T_i[i]] < mean_val){
-			S_i[n_S] = T_i[i];
+	for(i = 0; i < n_P; i++){
+		if(gyro_z[P_i[i]] > mean_val){
+			S_i[n_S] = P_i[i];
 			n_S++;
 		}
 	}

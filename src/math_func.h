@@ -10,5 +10,5 @@ void variance(double* data, int start_pos, int end_pos, double* var);
 void std(double* data, int start_pos, int end_pos, double* std_val);
 void rms(double* data, int start_pos, int end_pos, double* rms_val);
 void mad(double* data, int start_pos, int end_pos, double* mad_val);
-
+void integral(double* data, double* time, int start_pos, int end_pos, double* integral_val);
 #endif

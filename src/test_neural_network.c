@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 
     float max;
     fann_type *calc_out;
-    fann_type input[17];
+    fann_type input[18];
     struct fann *ann;
 
     FILE *fp;
@@ -42,12 +42,12 @@ int main(int argc, char **argv)
     while ((read = getline(&line, &len, fp)) != -1) {
         max = -100;
         /* parse the feature data*/
-        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
+        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
             &input[0], &input[1], &input[2],&input[3],&input[4],
             &input[5], &input[6], &input[7],&input[8],&input[9],
             &input[10], &input[11], &input[12],&input[13],&input[14],
-            &input[15], &input[16]);
-        if (rv != 17) {
+            &input[15], &input[16], &input[17]);
+        if (rv != 18) {
             fprintf(stderr,"Failed to read line2");
             exit(EXIT_FAILURE);
         }

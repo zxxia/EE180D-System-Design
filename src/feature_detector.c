@@ -19,17 +19,28 @@ Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		
 		max(data, pos0, pos1, &features[i].seg0.max);
 		min(data, pos0, pos1, &features[i].seg0.min);
+		
+
 		//Add seg max/min + period to array
 		max(data, pos1, pos2, &features[i].seg1.max);
 		min(data, pos1, pos2, &features[i].seg1.min);
+		
+
 		//Add seg max/min + period to array
 		max(data, pos2, pos3, &features[i].seg2.max);
-		min(data, pos1, pos2, &features[i].seg2.min);
+		min(data, pos2, pos3, &features[i].seg2.min);
+		
 		//Add seg max/min + period to array
 		max(data, pos3, pos4, &features[i].seg3.max);
 		min(data, pos3, pos4, &features[i].seg3.min);
-		//Add seg max/min + period to array
 		
+
+		//Add seg max/min + period to array
+		//mean(data, pos0, pos4, &features[i].abs_mean);
+		
+		integral(data, time, pos0, pos4, &features[i].abs_mean);
+		features[i].abs_mean = fabs(features[i].abs_mean);
+		fprintf(stdout, "%lf\n", features[i].abs_mean);
 		/*
 		find_variance(data, pos0, pos1, &features[i].seg0_var);
 		find_variance(data, pos1, pos2, &features[i].seg1_var);
@@ -80,16 +91,16 @@ void global_feature(double* accel_y, double* gyro_y,
 
 	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
 	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
-		 	features0[i].seg0.max, features0[i].seg0.min, 
+		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
+		 	features0[i].seg0.max, features0[i].seg0.min,
 			features0[i].seg1.max, features0[i].seg1.min,
 			features0[i].seg2.max, features0[i].seg2.min,
 			features0[i].seg3.max, features0[i].seg3.min,
-			features1[i].seg0.max, features1[i].seg0.min, 
+			features1[i].seg0.max, features1[i].seg0.min,
 			features1[i].seg1.max, features1[i].seg1.min,
 			features1[i].seg2.max, features1[i].seg2.min,
 			features1[i].seg3.max, features1[i].seg3.min,
-			period[i]);
+			features1[i].abs_mean, period[i]);
 	}
 	fclose(fp);
 

@@ -28,5 +28,6 @@ walk_feature_detector: ${SRC}/walk_feature_detector.c
 clean: 
 	rm -f main test_neural_network train_neural_net imu_data train_file_generator walk_feature_detector
 	rm -f *~
+	rm -f src/*~
 	rm -f TEST.net
 	rm -f test_data.txt

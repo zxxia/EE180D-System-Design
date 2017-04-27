@@ -21,12 +21,14 @@ typedef struct{
 typedef struct{
 	// segmentaion 0
 	Seg_feature seg0;
-// segmentaion 1
+	// segmentaion 1
 	Seg_feature seg1;
-// segmentaion 2
+	// segmentaion 2
 	Seg_feature seg2;
 	// segmentaion 3
 	Seg_feature seg3;
+	//absolute mean
+	double abs_mean;
 } Feature;
 
 Feature* extract_feature(double* data, double* time, int* S_i, int n_S);

@@ -78,6 +78,16 @@ void mad(double* data, int start_pos, int end_pos, double* mad_val)
 	*mad_val = sum / (double)totalPos;
 }
 
+//Numerical Integration using Trapezoid Method
+void integral(double* data, double* time, int start_pos, int end_pos, double* integral_val)
+{
+	int i;
+	*integral_val = 0.0;
+	for(i = start_pos; i < end_pos-1; i++){
+		*integral_val += 0.5 * (data[i + 1] + data[i]) * (time[i + 1] - time[i]);
+	}
+}
+
 //Max-min ratio
 
 //Skewness?????Not a good one????

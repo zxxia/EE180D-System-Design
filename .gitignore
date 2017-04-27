@@ -7,8 +7,7 @@
 *.swo
 # Binary executable #
 imu_data
-stride_detector
-feature_detector
 train_file_generator
 test_neural_network
+main
 train_neural_net

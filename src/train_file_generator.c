@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
 	int *pattern;
 
 	//Initialization
-	if(argc != 7) {
-		fprintf(stderr, "Usage: %s <input data file> <input data file 1> <input data file 2> <output train file> <input neuron num> <output neuron num>\n",
+	if(argc != 8) {
+		fprintf(stderr, "Usage: %s <turn feature file> <walk feature file> <stairs feature file 2> <run feature file> <output train file> <input neuron num> <output neuron num>\n",
 				argv[0]);
 		exit(EXIT_FAILURE);
 	}

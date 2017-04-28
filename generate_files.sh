@@ -4,7 +4,7 @@ DATA_DIR='new_data'
 OUTPUT_DIR='new_data_results'
 THRESHOLD=50
 INPUT_NUM=18
-OUTPUT_NUM=3
+OUTPUT_NUM=4
 echo "Stride detection and feature selection on turning data files..."
 ./main $DATA_DIR/turn_left.csv $OUTPUT_DIR/turn_left_pt.csv $OUTPUT_DIR/turn_left_st.csv $OUTPUT_DIR/turn_left_maxmin.csv $OUTPUT_DIR/turn_left_feature.csv $THRESHOLD
 
@@ -18,6 +18,9 @@ echo "Stride detection and feature selection on stairing data files..."
 ./main $DATA_DIR/stairs_up.csv $OUTPUT_DIR/stairs_up_pt.csv $OUTPUT_DIR/stairs_up_st.csv $OUTPUT_DIR/stairs_up_maxmin.csv $OUTPUT_DIR/stairs_up_feature.csv $THRESHOLD
 
 ./main $DATA_DIR/stairs_down.csv $OUTPUT_DIR/stairs_down_pt.csv $OUTPUT_DIR/stairs_down_st.csv $OUTPUT_DIR/stairs_down_maxmin.csv $OUTPUT_DIR/stairs_down_feature.csv $THRESHOLD
+
+echo "Stride detection and feature selection on running data files..."
+./main $DATA_DIR/run.csv $OUTPUT_DIR/run_pt.csv $OUTPUT_DIR/run_st.csv $OUTPUT_DIR/run_maxmin.csv $OUTPUT_DIR/run_feature.csv $THRESHOLD
 
 
 # Integrate the feature files
@@ -49,6 +52,8 @@ echo "Stride detection and feature selection on stairing test files..."
 
 ./main $DATA_DIR/test_stairs_down.csv $OUTPUT_DIR/test_stairs_down_pt.csv $OUTPUT_DIR/test_stairs_down_st.csv $OUTPUT_DIR/test_stairs_down_maxmin.csv $OUTPUT_DIR/test_stairs_down_feature.csv $THRESHOLD
 
+echo "Stride detection and feature selection on running test data files..."
+./main $DATA_DIR/test_run.csv $OUTPUT_DIR/test_run_pt.csv $OUTPUT_DIR/test_run_st.csv $OUTPUT_DIR/test_run_maxmin.csv $OUTPUT_DIR/test_run_feature.csv $THRESHOLD
 
 
 # Integrate the feature files
@@ -67,12 +72,12 @@ tail -n +2 $OUTPUT_DIR/test_stairs_down_feature.csv >> $OUTPUT_DIR/test_stairs_f
 printf "\n"
 
 printf "\nGenerate train files...\n"
-./train_file_generator $OUTPUT_DIR/turn_feature.csv $OUTPUT_DIR/walk_feature.csv $OUTPUT_DIR/stairs_feature.csv $OUTPUT_DIR/train.txt $INPUT_NUM $OUTPUT_NUM
+./train_file_generator $OUTPUT_DIR/turn_feature.csv $OUTPUT_DIR/walk_feature.csv $OUTPUT_DIR/stairs_feature.csv $OUTPUT_DIR/run_feature.csv $OUTPUT_DIR/train.txt $INPUT_NUM $OUTPUT_NUM
 
 
 
 printf "\nGenerate test files...\n"
-./train_file_generator $OUTPUT_DIR/test_turn_feature.csv $OUTPUT_DIR/test_walk_feature.csv $OUTPUT_DIR/test_stairs_feature.csv $OUTPUT_DIR/test.txt $INPUT_NUM $OUTPUT_NUM
+./train_file_generator $OUTPUT_DIR/test_turn_feature.csv $OUTPUT_DIR/test_walk_feature.csv $OUTPUT_DIR/test_stairs_feature.csv $OUTPUT_DIR/test_run_feature.csv $OUTPUT_DIR/test.txt $INPUT_NUM $OUTPUT_NUM
 
 printf "\nTrain neural network...\n"
 ./train_neural_net $OUTPUT_DIR/train.txt $INPUT_NUM $OUTPUT_NUM

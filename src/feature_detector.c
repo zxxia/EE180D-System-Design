@@ -40,7 +40,7 @@ Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		
 		integral(data, time, pos0, pos4, &features[i].abs_mean);
 		features[i].abs_mean = fabs(features[i].abs_mean);
-		fprintf(stdout, "%lf\n", features[i].abs_mean);
+		//fprintf(stdout, "%lf\n", features[i].abs_mean);
 		/*
 		find_variance(data, pos0, pos1, &features[i].seg0_var);
 		find_variance(data, pos1, pos2, &features[i].seg1_var);

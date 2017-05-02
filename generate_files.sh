@@ -9,6 +9,7 @@ echo "Stride detection and feature selection on turning data files..."
 ./main $DATA_DIR/turn_left.csv $OUTPUT_DIR/turn_left_pt.csv $OUTPUT_DIR/turn_left_st.csv $OUTPUT_DIR/turn_left_maxmin.csv $OUTPUT_DIR/turn_left_feature.csv $THRESHOLD
 
 ./main $DATA_DIR/turn_right.csv $OUTPUT_DIR/turn_right_pt.csv $OUTPUT_DIR/turn_right_st.csv $OUTPUT_DIR/turn_right_maxmin.csv $OUTPUT_DIR/turn_right_feature.csv $THRESHOLD
+
 echo "Stride detection and feature selection on walking data files..."
 ./main $DATA_DIR/walk_slow.csv $OUTPUT_DIR/walk_slow_pt.csv $OUTPUT_DIR/walk_slow_st.csv $OUTPUT_DIR/walk_slow_maxmin.csv $OUTPUT_DIR/walk_slow_feature.csv $THRESHOLD
 ./main $DATA_DIR/walk_med.csv $OUTPUT_DIR/walk_med_pt.csv $OUTPUT_DIR/walk_med_st.csv $OUTPUT_DIR/walk_med_maxmin.csv $OUTPUT_DIR/walk_med_feature.csv $THRESHOLD
@@ -22,6 +23,10 @@ echo "Stride detection and feature selection on stairing data files..."
 echo "Stride detection and feature selection on running data files..."
 ./main $DATA_DIR/run.csv $OUTPUT_DIR/run_pt.csv $OUTPUT_DIR/run_st.csv $OUTPUT_DIR/run_maxmin.csv $OUTPUT_DIR/run_feature.csv $THRESHOLD
 
+echo "Stride detection and feature selection on jumping data files..."
+./main $DATA_DIR/jump_low.csv $OUTPUT_DIR/jump_low_pt.csv $OUTPUT_DIR/jump_low_st.csv $OUTPUT_DIR/jump_low_maxmin.csv $OUTPUT_DIR/jump_low_feature.csv $THRESHOLD
+./main $DATA_DIR/jump_med.csv $OUTPUT_DIR/jump_med_pt.csv $OUTPUT_DIR/jump_med_st.csv $OUTPUT_DIR/jump_med_maxmin.csv $OUTPUT_DIR/jump_med_feature.csv $THRESHOLD
+./main $DATA_DIR/jump_high.csv $OUTPUT_DIR/jump_high_pt.csv $OUTPUT_DIR/jump_high_st.csv $OUTPUT_DIR/jump_high_maxmin.csv $OUTPUT_DIR/jump_high_feature.csv $THRESHOLD
 
 # Integrate the feature files
 cat $OUTPUT_DIR/walk_slow_feature.csv > $OUTPUT_DIR/walk_feature.csv
@@ -31,6 +36,9 @@ tail -n +2 $OUTPUT_DIR/walk_fast_feature.csv >> $OUTPUT_DIR/walk_feature.csv
 cat $OUTPUT_DIR/turn_left_feature.csv > $OUTPUT_DIR/turn_feature.csv
 tail -n +2 $OUTPUT_DIR/turn_right_feature.csv >> $OUTPUT_DIR/turn_feature.csv
 
+cat $OUTPUT_DIR/jump_low_feature.csv > $OUTPUT_DIR/jump_feature.csv
+tail -n +2 $OUTPUT_DIR/jump_med_feature.csv >> $OUTPUT_DIR/jump_feature.csv
+tail -n +2 $OUTPUT_DIR/jump_high_feature.csv >> $OUTPUT_DIR/jump_feature.csv
 
 cat $OUTPUT_DIR/stairs_up_feature.csv > $OUTPUT_DIR/stairs_feature.csv
 tail -n +2 $OUTPUT_DIR/stairs_down_feature.csv >> $OUTPUT_DIR/stairs_feature.csv
@@ -55,6 +63,11 @@ echo "Stride detection and feature selection on stairing test files..."
 echo "Stride detection and feature selection on running test data files..."
 ./main $DATA_DIR/test_run.csv $OUTPUT_DIR/test_run_pt.csv $OUTPUT_DIR/test_run_st.csv $OUTPUT_DIR/test_run_maxmin.csv $OUTPUT_DIR/test_run_feature.csv $THRESHOLD
 
+echo "Stride detection and feature selection on jumping test data files..."
+./main $DATA_DIR/test_jump_low.csv $OUTPUT_DIR/test_jump_low_pt.csv $OUTPUT_DIR/test_jump_low_st.csv $OUTPUT_DIR/test_jump_low_maxmin.csv $OUTPUT_DIR/test_jump_low_feature.csv $THRESHOLD
+./main $DATA_DIR/test_jump_med.csv $OUTPUT_DIR/test_jump_med_pt.csv $OUTPUT_DIR/test_jump_med_st.csv $OUTPUT_DIR/test_jump_med_maxmin.csv $OUTPUT_DIR/test_jump_med_feature.csv $THRESHOLD
+./main $DATA_DIR/test_jump_high.csv $OUTPUT_DIR/test_jump_high_pt.csv $OUTPUT_DIR/test_jump_high_st.csv $OUTPUT_DIR/test_jump_high_maxmin.csv $OUTPUT_DIR/test_jump_high_feature.csv $THRESHOLD
+
 
 # Integrate the feature files
 cat $OUTPUT_DIR/test_walk_slow_feature.csv > $OUTPUT_DIR/test_walk_feature.csv
@@ -68,6 +81,9 @@ tail -n +2 $OUTPUT_DIR/turn_right_feature.csv >> $OUTPUT_DIR/test_turn_feature.c
 cat $OUTPUT_DIR/test_stairs_up_feature.csv > $OUTPUT_DIR/test_stairs_feature.csv
 tail -n +2 $OUTPUT_DIR/test_stairs_down_feature.csv >> $OUTPUT_DIR/test_stairs_feature.csv
 
+cat $OUTPUT_DIR/test_jump_low_feature.csv > $OUTPUT_DIR/test_jump_feature.csv
+tail -n +2 $OUTPUT_DIR/test_jump_med_feature.csv >> $OUTPUT_DIR/test_jump_feature.csv
+tail -n +2 $OUTPUT_DIR/test_jump_high_feature.csv >> $OUTPUT_DIR/test_jump_feature.csv
 
 printf "\n"
 

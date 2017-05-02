@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     fp = fopen(argv[1], "r+");
     //There are total four types of movement which means we will have a 4*4 confusion matix
     // turn, walk, stairs, run
-    int conf_matrix[OUTPUT_NEURON_NUM][OUTPUT_NEURON_NUM] = {{0,0,0,},{0,0,0},{0,0,0}, {0,0,0}};
+    int conf_matrix[OUTPUT_NEURON_NUM][OUTPUT_NEURON_NUM] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
     int answer[OUTPUT_NEURON_NUM] = {-1,-1,-1,-1};
     int answerLoc;
     int numLines = 0;
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
         read = getline(&line, &len, fp);
         /* parse the type data in the test file*/
-        rv = sscanf(line, "%d\t%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2], &answer[3]);
+        rv = sscanf(line, "%d\t%d\t%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2], &answer[3], &answer[4]);
         if (rv != OUTPUT_NEURON_NUM) {
             fprintf(stderr,"Failed to read line3");
             exit(EXIT_FAILURE);
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         conf_matrix[answerLoc][location]++;
 
         printf("Input values: %f, %f, %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], input[3], input[4], location);
-        usleep(500000);
+        usleep(300000);
     }
 
     /*Display the confusion matrix in std::output*/

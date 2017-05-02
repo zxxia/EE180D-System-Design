@@ -28,7 +28,7 @@ typedef struct{
 	// segmentaion 3
 	Seg_feature seg3;
 	//absolute mean
-	double abs_mean;
+	double abs_integral;
 } Feature;
 
 Feature* extract_feature(double* data, double* time, int* S_i, int n_S);

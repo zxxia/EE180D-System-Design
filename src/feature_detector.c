@@ -38,8 +38,8 @@ Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		//Add seg max/min + period to array
 		//mean(data, pos0, pos4, &features[i].abs_mean);
 		
-		integral(data, time, pos0, pos4, &features[i].abs_mean);
-		features[i].abs_mean = fabs(features[i].abs_mean);
+		integral(data, time, pos0, pos4, &features[i].abs_integral);
+		features[i].abs_integral = fabs(features[i].abs_integral);
 		//fprintf(stdout, "%lf\n", features[i].abs_mean);
 		/*
 		find_variance(data, pos0, pos1, &features[i].seg0_var);
@@ -63,8 +63,8 @@ void global_feature(double* accel_y, double* gyro_y,
 	FILE *fp;
 
 	// Feature needed
-	Feature* features0;
-	Feature* features1;
+	Feature* features_accel_y;
+	Feature* features_gyro_y;
 	double* period;
 
 
@@ -76,8 +76,8 @@ void global_feature(double* accel_y, double* gyro_y,
 	}
 
 	//2 indices divided by 4 
-	features1 = extract_feature(gyro_y, time, S_i, n_S);
-	features0 = extract_feature(accel_y, time, S_i, n_S);
+	features_gyro_y = extract_feature(gyro_y, time, S_i, n_S);
+	features_accel_y = extract_feature(accel_y, time, S_i, n_S);
 
 	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
 	fp = fopen(ofile_feature_name, "w");
@@ -92,15 +92,15 @@ void global_feature(double* accel_y, double* gyro_y,
 	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
 	for(i = 0; i < n_S-1; i++){
 		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
-		 	features0[i].seg0.max, features0[i].seg0.min,
-			features0[i].seg1.max, features0[i].seg1.min,
-			features0[i].seg2.max, features0[i].seg2.min,
-			features0[i].seg3.max, features0[i].seg3.min,
-			features1[i].seg0.max, features1[i].seg0.min,
-			features1[i].seg1.max, features1[i].seg1.min,
-			features1[i].seg2.max, features1[i].seg2.min,
-			features1[i].seg3.max, features1[i].seg3.min,
-			features1[i].abs_mean, period[i]);
+		 	features_accel_y[i].seg0.max, features_accel_y[i].seg0.min,
+			features_accel_y[i].seg1.max, features_accel_y[i].seg1.min,
+			features_accel_y[i].seg2.max, features_accel_y[i].seg2.min,
+			features_accel_y[i].seg3.max, features_accel_y[i].seg3.min,
+			features_gyro_y[i].seg0.max, features_gyro_y[i].seg0.min,
+			features_gyro_y[i].seg1.max, features_gyro_y[i].seg1.min,
+			features_gyro_y[i].seg2.max, features_gyro_y[i].seg2.min,
+			features_gyro_y[i].seg3.max, features_gyro_y[i].seg3.min,
+			features_gyro_y[i].abs_integral, period[i]);
 	}
 	fclose(fp);
 

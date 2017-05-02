@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
 	//Initialization
 	if(argc != 8) {
-		fprintf(stderr, "Usage: %s <turn feature file> <walk feature file> <stairs feature file 2> <run feature file> <output train file> <input neuron num> <output neuron num>\n",
+		fprintf(stderr, "Usage: %s <turn feature file> <walk feature file> <stairs feature file> <run feature file> <output train file> <input neuron num> <output neuron num>\n",
 				argv[0]);
 		exit(EXIT_FAILURE);
 	}

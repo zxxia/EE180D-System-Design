@@ -1,6 +1,13 @@
-# Compiled source #
+
+# Compiled objective files #
 *.o
 # Vim temporary files #
 *~
 *.swp
 *.swo
+# Binary executable #
+imu_data
+train_file_generator
+test_neural_network
+main
+train_neural_net

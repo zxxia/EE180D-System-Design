@@ -1,10 +1,13 @@
 #include "feature_detector.h"
 // Divide the stride into 4 segmentations
 // Extract max min on each segmentation
-Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
+GlobalFeature* extract_global_feature(double *accel_y, double *gyro_y, double *time, int *S_i, int n_S, GlobalFeatureScale* scale)
 {
 	int i;
-	Feature *features = (Feature*) malloc(sizeof(Feature) * n_S-1);
+	GlobalFeature *features = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
+	scale = (GlobalFeatureScale*) malloc(sizeof(GlobalFeatureScale));
+	scale->gyro_y_abs_integral_scale = 0;
+	scale->period_scale = 0;
 	
 	for(i = 0; i< n_S-1; i++){
 
@@ -17,92 +20,82 @@ Feature* extract_feature(double* data, double* time, int* S_i, int n_S)
 		int pos4 = S_i[i+1];
 
 		
-		max(data, pos0, pos1, &features[i].seg0.max);
-		min(data, pos0, pos1, &features[i].seg0.min);
-		
+		max(accel_y, pos0, pos1, &features[i].accel_y_seg0_max);
+		min(accel_y, pos0, pos1, &features[i].accel_y_seg0_min);
+		max(accel_y, pos1, pos2, &features[i].accel_y_seg1_max);
+		min(accel_y, pos1, pos2, &features[i].accel_y_seg1_min);
+		max(accel_y, pos2, pos3, &features[i].accel_y_seg2_max);
+		min(accel_y, pos2, pos3, &features[i].accel_y_seg2_min);
+		max(accel_y, pos3, pos4, &features[i].accel_y_seg3_max);
+		min(accel_y, pos3, pos4, &features[i].accel_y_seg3_min);
 
-		//Add seg max/min + period to array
-		max(data, pos1, pos2, &features[i].seg1.max);
-		min(data, pos1, pos2, &features[i].seg1.min);
+		max(gyro_y, pos0, pos1, &features[i].gyro_y_seg0_max);
+		min(gyro_y, pos0, pos1, &features[i].gyro_y_seg0_min);
+		max(gyro_y, pos1, pos2, &features[i].gyro_y_seg1_max);
+		min(gyro_y, pos1, pos2, &features[i].gyro_y_seg1_min);
+		max(gyro_y, pos2, pos3, &features[i].gyro_y_seg2_max);
+		min(gyro_y, pos2, pos3, &features[i].gyro_y_seg2_min);
+		max(gyro_y, pos3, pos4, &features[i].gyro_y_seg3_max);
+		min(gyro_y, pos3, pos4, &features[i].gyro_y_seg3_min);
 		
+		integral(gyro_y, time, pos0, pos4, &features[i].gyro_y_abs_integral);
+		features[i].gyro_y_abs_integral = fabs(features[i].gyro_y_abs_integral);
+		if(features[i].gyro_y_abs_integral > scale->gyro_y_abs_integral_scale)
+			scale->gyro_y_abs_integral_scale = features[i].gyro_y_abs_integral;
 
-		//Add seg max/min + period to array
-		max(data, pos2, pos3, &features[i].seg2.max);
-		min(data, pos2, pos3, &features[i].seg2.min);
-		
-		//Add seg max/min + period to array
-		max(data, pos3, pos4, &features[i].seg3.max);
-		min(data, pos3, pos4, &features[i].seg3.min);
-		
-
-		//Add seg max/min + period to array
-		//mean(data, pos0, pos4, &features[i].abs_mean);
-		
-		integral(data, time, pos0, pos4, &features[i].abs_integral);
-		features[i].abs_integral = fabs(features[i].abs_integral);
-		//fprintf(stdout, "%lf\n", features[i].abs_mean);
-		/*
-		find_variance(data, pos0, pos1, &features[i].seg0_var);
-		find_variance(data, pos1, pos2, &features[i].seg1_var);
-		find_variance(data, pos2, pos3, &features[i].seg2_var);
-		find_variance(data, pos3, pos4, &features[i].seg3_var);
-		*/
+		features[i].period = time[S_i[i+1]] - time[S_i[i]];
+		if(features[i].period > scale->period_scale)
+			scale->period_scale = features[i].period;
 	}
-
 	return features;
 }
 
 
 
 
-void global_feature(double* accel_y, double* gyro_y,
-	double* time, int* S_i, int n_S, char* ofile_maxmin_name, char* ofile_feature_name)
-{
-	/* Generic variables */
-	int i;
-	FILE *fp;
 
-	// Feature needed
-	Feature* features_accel_y;
-	Feature* features_gyro_y;
-	double* period;
+// void global_feature(double* accel_y, double* gyro_y,
+// 	double* time, int* S_i, int n_S, const char* ofile_feature_name)
+// {
+// 	/* Generic variables */
+// 	int i;
+// 	FILE *fp;
+
+// 	// Feature needed
+// 	Global_feature* feature;
+// 	/* feature detection section*/
+
+// 	//2 indices divided by 4 
+// 	feature.features_gyro_y = extract_feature(gyro_y, time, S_i, n_S, GLOBAL);
+// 	feature.features_accel_y = extract_feature(accel_y, time, S_i, n_S, GLOBAL);
+// 	feature.period = (double*) malloc(sizeof(double)*(n_S - 1));
+// 	for(i = 0; i < n_S-1; i++){
+// 		feature.period[i] = time[S_i[i+1]] - time[S_i[i]];
+// 	}
 
 
-	/* feature detection section*/
-	// compute period
-	period = (double*) malloc(sizeof(double)*(n_S - 1));
-	for(i = 0; i < n_S-1; i++){
-		period[i] = time[S_i[i+1]] - time[S_i[i]];
-	}
+// 	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
+// 	fp = fopen(ofile_feature_name, "w");
+// 	if (fp == NULL) {
+// 		fprintf(stderr, "Failed to write to file \'%s\'.\n", 
+// 				ofile_feature_name);
+// 		exit(EXIT_FAILURE); 
+// 	}
 
-	//2 indices divided by 4 
-	features_gyro_y = extract_feature(gyro_y, time, S_i, n_S);
-	features_accel_y = extract_feature(accel_y, time, S_i, n_S);
+// 	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
+// 	for(i = 0; i < n_S-1; i++){
+// 		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
+// 		 	features_accel_y[i].seg0.max/6.0, features_accel_y[i].seg0.min/6.0,
+// 			features_accel_y[i].seg1.max/6.0, features_accel_y[i].seg1.min/6.0,
+// 			features_accel_y[i].seg2.max/6.0, features_accel_y[i].seg2.min/6.0,
+// 			features_accel_y[i].seg3.max/6.0, features_accel_y[i].seg3.min/6.0,
+// 			features_gyro_y[i].seg0.max/500.0, features_gyro_y[i].seg0.min/500.0,
+// 			features_gyro_y[i].seg1.max/500.0, features_gyro_y[i].seg1.min/500.0,
+// 			features_gyro_y[i].seg2.max/500.0, features_gyro_y[i].seg2.min/500.0,
+// 			features_gyro_y[i].seg3.max/500.0, features_gyro_y[i].seg3.min/500.0,
+// 			features_gyro_y[i].abs_integral, features_gyro_y[i].period);
+// 	}
+// 	fclose(fp);
 
-	printf("Attempting to write to file \'%s\'.\n", ofile_feature_name);
-	fp = fopen(ofile_feature_name, "w");
-	if (fp == NULL) {
-		fprintf(stderr, 
-				"Failed to write to file \'%s\'.\n", 
-				ofile_feature_name
-		       );
-		exit(EXIT_FAILURE); 
-	}
+// }
 
-	fprintf(fp, "Seg0_Max,Seg0_Min,Seg1_Max,Seg1_Min,Seg2_Max,Seg2_Min,Seg3_Max,Seg3_Min,Period\n");
-	for(i = 0; i < n_S-1; i++){
-		fprintf(fp, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%20.10lf\n",
-		 	features_accel_y[i].seg0.max, features_accel_y[i].seg0.min,
-			features_accel_y[i].seg1.max, features_accel_y[i].seg1.min,
-			features_accel_y[i].seg2.max, features_accel_y[i].seg2.min,
-			features_accel_y[i].seg3.max, features_accel_y[i].seg3.min,
-			features_gyro_y[i].seg0.max, features_gyro_y[i].seg0.min,
-			features_gyro_y[i].seg1.max, features_gyro_y[i].seg1.min,
-			features_gyro_y[i].seg2.max, features_gyro_y[i].seg2.min,
-			features_gyro_y[i].seg3.max, features_gyro_y[i].seg3.min,
-			features_gyro_y[i].abs_integral, period[i]);
-	}
-	fclose(fp);
-
-	//return 0;
-}

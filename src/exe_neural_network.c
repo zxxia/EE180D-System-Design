@@ -1,21 +1,85 @@
+#include "exe_neural_network.h"
 
+void init_networks()
+{
+    global_ann = fann_create_from_file("GLOBAL.net");
+}
+void destroy_networks()
+{
+    fann_destroy(global_ann);
+}
+int exe_global_neural_network(const GlobalFeature *global_feature)
+{
+    int i;
+    int location;
 
-int main(int argc, char **argv)
+    double max;
+    fann_type *calc_out;
+    fann_type input[18];
+   
+    max = -100;
+    /* parse the feature data*/
+
+    input[0] = global_feature-> accel_y_seg0_max; 
+    input[1] = global_feature-> accel_y_seg0_min;
+    input[2] = global_feature-> accel_y_seg1_max;
+    input[3] = global_feature-> accel_y_seg1_min;
+    input[4] = global_feature-> accel_y_seg2_max;
+    input[5] = global_feature-> accel_y_seg2_min;
+    input[6] = global_feature-> accel_y_seg3_max;
+    input[7] = global_feature-> accel_y_seg3_min;
+    input[8] = global_feature-> gyro_y_seg0_max;
+    input[9] = global_feature-> gyro_y_seg0_min;
+    input[10] = global_feature-> gyro_y_seg1_max;
+    input[11] = global_feature-> gyro_y_seg1_min;
+    input[12] = global_feature-> gyro_y_seg2_max;
+    input[13] = global_feature-> gyro_y_seg2_min;
+    input[14] = global_feature-> gyro_y_seg3_max;
+    input[15] = global_feature-> gyro_y_seg3_min;
+    input[16] = global_feature-> gyro_y_abs_integral;
+    input[17] = global_feature-> period;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(global_ann, input);
+    for (i = 0; i < 4; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+
+    /*switch(location) {
+        case TURN_CASE:
+            printf("Got Input values -> Movement type is %s\n", "Turning");
+            return TURN_CASE;
+        case WALK_CASE:
+            printf("Got Input values -> Movement type is %s\n", "Walking");
+            return WALK_CASE;
+        case STAIR_CASE:
+            printf("Got Input values -> Movement type is %s\n", "Stairs");
+            return STAIR_CASE;
+        case RUN_CASE:
+            return RUN_CASE;
+        case JUMP_CASE:
+            printf("Got Input values -> Movement type is %s\n", "Jumping");
+            return JUMP_CASE;
+    }*/
+}
+
+int exe_walk_neural_network(const char *walk_feature_file)
 {
     int i;
     int location;
 
     float max;
     fann_type *calc_out;
-    fann_type input[17];
+    fann_type input[9];
     struct fann *ann;
 
     FILE *fp;
-    fp = fopen(argv[1], "r+");
-    //There are total three types of movement which means we will have a 3*3 confusion matix
-    int conf_matrix[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
-    int answer[3] = {-1,-1,-1};
-    int answerLoc;
+    fp = fopen(walk_feature_file, "r+");
+    //int answer[3] = {-1,-1,-1};
     int numLines = 0;
     int inN = 0;
     int outN = 0;
@@ -23,14 +87,16 @@ int main(int argc, char **argv)
     size_t len = 0;
     ssize_t read;
     int rv;
+    //char* str_answer;
     
-    ann = fann_create_from_file("TEST.net");
+    ann = fann_create_from_file("WALK.net");
 
 
     /* get number of lines in the file */
     read = getline(&line, &len, fp);
     rv = sscanf(line, "%d\t%d\t%d\n", &numLines, &inN, &outN);
     if (rv != 3) {
+        fprintf(stderr,"Error: Failed to read header line\n");
         exit(EXIT_FAILURE);
     }
 
@@ -39,13 +105,12 @@ int main(int argc, char **argv)
     while ((read = getline(&line, &len, fp)) != -1) {
         max = -100;
         /* parse the feature data*/
-        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
-            &input[0], &input[1], &input[2],&input[3],&input[4],
-            &input[5], &input[6], &input[7],&input[8],&input[9],
-            &input[10], &input[11], &input[12],&input[13],&input[14],
-            &input[15], &input[16]);
-        if (rv != 17) {
-            fprintf(stderr,"Failed to read line2");
+        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
+            &input[0], &input[1], &input[2],
+            &input[3], &input[4], &input[5],
+            &input[6], &input[7], &input[8]);
+        if (rv != 9) {
+            fprintf(stderr,"Error: Failed to read data line\n");
             exit(EXIT_FAILURE);
         }
         /*Caluculate the type predicted by our trained network*/
@@ -57,42 +122,23 @@ int main(int argc, char **argv)
             }
         }
 
-        read = getline(&line, &len, fp);
-        /* parse the type data in the test file*/
-        rv = sscanf(line, "%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2]);
-        if (rv != 3) {
-            fprintf(stderr,"Failed to read line3");
-            exit(EXIT_FAILURE);
-        }
-        /*Get the expected type*/
-        for(i=0; i<3; i++) {
-            if(answer[i] == 1) {
-                answerLoc = i;
+        switch(location) {
+            case FAST_WALK:
+                printf("\t\tGot Input values -> Walking type is %s\n", "Fast walking");
+                sleep(1);
                 break;
-            }
+            case MED_WALK:
+                printf("\t\tGot Input values -> Walking type is %s\n", "Med walking");
+                sleep(1);
+                break;
+            case SLOW_WALK:
+                printf("\t\tGot Input values -> Walking type is %s\n", "Slow walking");
+                sleep(1);
+                break;
         }
-        /*Add this type in certain position in confusion matrix*/
-        conf_matrix[answerLoc][location]++;
-
-        printf("Input values: %f, %f, %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], input[3], input[4], location);
-        sleep(1);
-    }
-
-    /*Display the confusion matrix in std::output*/
-    int row;
-    int col;
-    for(row = 0; row < 3; row++) {
-        for(col = 0; col < 3; col++) {
-            printf("%d\t", conf_matrix[row][col]);
-        }
-        printf("\n");
     }
 
     fclose(fp);
     fann_destroy(ann);
     return 0;
 }
-
-
-
-

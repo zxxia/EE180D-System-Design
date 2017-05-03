@@ -33,18 +33,28 @@ typedef struct
 	double period;
 } GlobalFeature;
 
-typedef struct{
-	double gyro_y_abs_integral_scale;
-	double period_scale;
-} GlobalFeatureScale;
+typedef struct
+{
+	double accel_x_seg0_mean;
+	double accel_x_seg0_var;
+	double accel_x_seg1_mean;
+	double accel_x_seg1_var;
+	double accel_x_seg2_mean;
+	double accel_x_seg2_var;
+	double accel_x_seg3_mean;
+	double accel_x_seg3_var;
+	double period;
+} WalkFeature;
+
 
 //Feature* extract_feature(double* data, double* time, int* S_i, int n_S, int feature_case);
 
-GlobalFeature* extract_global_feature(double* accel_y, double* gyro_y,
-	double* time, int* S_i, int n_S, GlobalFeatureScale* scale);
+void segmentation(int* pos, int start_pos, int end_pos);
 
-void walk_feature(double* accel_x,
-	double* time, int* S_i, int n_S, const char* ofile_walk_feature_name);
+GlobalFeature* extract_global_feature(double* accel_y, double* gyro_y,
+	double* time, int* S_i, int n_S);
+
+WalkFeature* extract_walk_feature(double* accel_x, double* time, int* S_i, int n_S);
 
 /*
 void turn_feature(double* accel_y, double* gyro_y,

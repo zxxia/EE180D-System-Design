@@ -138,7 +138,7 @@ int process_file(const char *fname, float pk_threshold) {
 	}
 
 	//Stride detection
-	printf("Attempting to filter troughs.\n");
+	printf("Attempting to do stride detection.\n");
 	S_i = (int *) malloc(sizeof(int) * n_P);
 	temp = (double *)malloc(sizeof(double) * n_P);
 	for(i = 0; i < n_P; i++){
@@ -154,10 +154,11 @@ int process_file(const char *fname, float pk_threshold) {
 	
 
 	//Collect global features
+	printf("Attempting to collect features for global classifier...\n");
 	GlobalFeature* global_feature;
-	GlobalFeatureScale global_scale;
-	global_feature = extract_global_feature(accel_y, gyro_y, time, S_i, n_S, &global_scale);
 
+	global_feature = extract_global_feature(accel_y, gyro_y, time, S_i, n_S);
+	
 	init_networks();
 
 	int motion_type;

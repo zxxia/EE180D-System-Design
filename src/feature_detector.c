@@ -1,55 +1,81 @@
 #include "feature_detector.h"
 // Divide the stride into 4 segmentations
 // Extract max min on each segmentation
-GlobalFeature* extract_global_feature(double *accel_y, double *gyro_y, double *time, int *S_i, int n_S, GlobalFeatureScale* scale)
+
+void segmentation(int* pos, int start_pos, int end_pos)
+{
+	float step = (float)(end_pos - start_pos);
+	pos[0] = start_pos;
+	pos[1] = start_pos + (int)(step / 4.0);
+	pos[2] = start_pos + (int)(step / 2.0);
+	pos[3] = start_pos + (int)(3.0 * step / 4.0);
+	pos[4] = end_pos;
+}
+
+GlobalFeature* extract_global_feature(double *accel_y, double *gyro_y, double *time, int *S_i, int n_S)
 {
 	int i;
 	GlobalFeature *features = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
-	scale = (GlobalFeatureScale*) malloc(sizeof(GlobalFeatureScale));
-	scale->gyro_y_abs_integral_scale = 0;
-	scale->period_scale = 0;
+
+	int pos[5];
+	for(i = 0; i< n_S-1; i++){
+
+		// stride segmentation
+		segmentation(pos, S_i[i], S_i[i+1]);
+
+		// Extract features
+		max(accel_y, pos[0], pos[1], &features[i].accel_y_seg0_max);
+		min(accel_y, pos[0], pos[1], &features[i].accel_y_seg0_min);
+		max(accel_y, pos[1], pos[2], &features[i].accel_y_seg1_max);
+		min(accel_y, pos[1], pos[2], &features[i].accel_y_seg1_min);
+		max(accel_y, pos[2], pos[3], &features[i].accel_y_seg2_max);
+		min(accel_y, pos[2], pos[3], &features[i].accel_y_seg2_min);
+		max(accel_y, pos[3], pos[4], &features[i].accel_y_seg3_max);
+		min(accel_y, pos[3], pos[4], &features[i].accel_y_seg3_min);
+
+		max(gyro_y, pos[0], pos[1], &features[i].gyro_y_seg0_max);
+		min(gyro_y, pos[0], pos[1], &features[i].gyro_y_seg0_min);
+		max(gyro_y, pos[1], pos[2], &features[i].gyro_y_seg1_max);
+		min(gyro_y, pos[1], pos[2], &features[i].gyro_y_seg1_min);
+		max(gyro_y, pos[2], pos[3], &features[i].gyro_y_seg2_max);
+		min(gyro_y, pos[2], pos[3], &features[i].gyro_y_seg2_min);
+		max(gyro_y, pos[3], pos[4], &features[i].gyro_y_seg3_max);
+		min(gyro_y, pos[3], pos[4], &features[i].gyro_y_seg3_min);
+		
+		integral(gyro_y, time, pos[0], pos[4], &features[i].gyro_y_abs_integral);
+		features[i].gyro_y_abs_integral = fabs(features[i].gyro_y_abs_integral);
+
+		features[i].period = time[S_i[i+1]] - time[S_i[i]];
+	}
+
+	return features;
+}
+
+
+WalkFeature* extract_walk_feature(double *accel_x, double *time, int *S_i, int n_S)
+{
+	int i;
+	int pos[5];
+	WalkFeature *features = (WalkFeature*) malloc(sizeof(WalkFeature) * n_S-1);
 	
 	for(i = 0; i< n_S-1; i++){
 
 		// Segmentation
-		float step = (float)(S_i[i+1] - S_i[i]);
-		int pos0 = S_i[i];
-		int pos1 = S_i[i] + (int)(step / 4.0);
-		int pos2 = S_i[i] + (int)(step / 2.0);
-		int pos3 = S_i[i] + (int)(3.0 * step / 4.0);
-		int pos4 = S_i[i+1];
-
+		segmentation(pos, S_i[i], S_i[i+1]);
 		
-		max(accel_y, pos0, pos1, &features[i].accel_y_seg0_max);
-		min(accel_y, pos0, pos1, &features[i].accel_y_seg0_min);
-		max(accel_y, pos1, pos2, &features[i].accel_y_seg1_max);
-		min(accel_y, pos1, pos2, &features[i].accel_y_seg1_min);
-		max(accel_y, pos2, pos3, &features[i].accel_y_seg2_max);
-		min(accel_y, pos2, pos3, &features[i].accel_y_seg2_min);
-		max(accel_y, pos3, pos4, &features[i].accel_y_seg3_max);
-		min(accel_y, pos3, pos4, &features[i].accel_y_seg3_min);
-
-		max(gyro_y, pos0, pos1, &features[i].gyro_y_seg0_max);
-		min(gyro_y, pos0, pos1, &features[i].gyro_y_seg0_min);
-		max(gyro_y, pos1, pos2, &features[i].gyro_y_seg1_max);
-		min(gyro_y, pos1, pos2, &features[i].gyro_y_seg1_min);
-		max(gyro_y, pos2, pos3, &features[i].gyro_y_seg2_max);
-		min(gyro_y, pos2, pos3, &features[i].gyro_y_seg2_min);
-		max(gyro_y, pos3, pos4, &features[i].gyro_y_seg3_max);
-		min(gyro_y, pos3, pos4, &features[i].gyro_y_seg3_min);
-		
-		integral(gyro_y, time, pos0, pos4, &features[i].gyro_y_abs_integral);
-		features[i].gyro_y_abs_integral = fabs(features[i].gyro_y_abs_integral);
-		if(features[i].gyro_y_abs_integral > scale->gyro_y_abs_integral_scale)
-			scale->gyro_y_abs_integral_scale = features[i].gyro_y_abs_integral;
+		mean(accel_x, pos[0], pos[1], &features[i].accel_x_seg0_mean);
+		variance(accel_x, pos[0], pos[1], &features[i].accel_x_seg0_var);
+		mean(accel_x, pos[1], pos[2], &features[i].accel_x_seg1_mean);
+		variance(accel_x, pos[1], pos[2], &features[i].accel_x_seg1_var);
+		mean(accel_x, pos[2], pos[3], &features[i].accel_x_seg2_mean);
+		variance(accel_x, pos[2], pos[3], &features[i].accel_x_seg2_var);
+		mean(accel_x, pos[3], pos[4], &features[i].accel_x_seg3_mean);
+		variance(accel_x, pos[3], pos[4], &features[i].accel_x_seg3_var);
 
 		features[i].period = time[S_i[i+1]] - time[S_i[i]];
-		if(features[i].period > scale->period_scale)
-			scale->period_scale = features[i].period;
 	}
 	return features;
 }
-
 
 
 

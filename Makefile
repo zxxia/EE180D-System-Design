@@ -1,6 +1,6 @@
 CC=gcc
 LDFLAGS=-lmraa -lfann
-CFLAGS=-Wall
+CFLAGS=-Wall -g
 SRC=src
 SOURCES=${SRC}/math_func.c ${SRC}/stride_detector.c ${SRC}/feature_detector.c ${SRC}/producer.c ${SRC}/consumer.c ${SRC}/exe_neural_network.c
 EXECUTABLES=$(SOURCES:.c=)

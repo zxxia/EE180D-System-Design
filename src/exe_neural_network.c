@@ -2,17 +2,21 @@
 
 void init_networks()
 {
-    global_ann = fann_create_from_file("GLOBAL.net");
-    turn_ann = fann_create_from_file("TURN.net");
+    global_ann = fann_create_from_file("net/GLOBAL.net");
+    turn_ann = fann_create_from_file("net/TURN.net");
+    walk_ann = fann_create_from_file("net/WALK.net");
+    stair_ann = fann_create_from_file("net/STAIRS.net");
 }
 
 void destroy_networks()
 {
     fann_destroy(global_ann);
     fann_destroy(turn_ann);
+    fann_destroy(walk_ann);
+    fann_destroy(stair_ann);
 }
 
-int exe_global_neural_network(const GlobalFeature *global_feature)
+int exe_global_neural_network(const GlobalFeature *feature)
 {
     int i;
     int location;
@@ -24,24 +28,24 @@ int exe_global_neural_network(const GlobalFeature *global_feature)
     max = -100;
     /* parse the feature data*/
 
-    input[0] = global_feature->accel_y_seg0_max/6.0; 
-    input[1] = global_feature->accel_y_seg0_min/6.0;
-    input[2] = global_feature->accel_y_seg1_max/6.0;
-    input[3] = global_feature->accel_y_seg1_min/6.0;
-    input[4] = global_feature->accel_y_seg2_max/6.0;
-    input[5] = global_feature->accel_y_seg2_min/6.0;
-    input[6] = global_feature->accel_y_seg3_max/6.0;
-    input[7] = global_feature->accel_y_seg3_min/6.0;
-    input[8] = global_feature->gyro_y_seg0_max/500.0;
-    input[9] = global_feature->gyro_y_seg0_min/500.0;
-    input[10] = global_feature->gyro_y_seg1_max/500.0;
-    input[11] = global_feature->gyro_y_seg1_min/500.0;
-    input[12] = global_feature->gyro_y_seg2_max/500.0;
-    input[13] = global_feature->gyro_y_seg2_min/500.0;
-    input[14] = global_feature->gyro_y_seg3_max/500.0;
-    input[15] = global_feature->gyro_y_seg3_min/500.0;
-    input[16] = global_feature->gyro_y_abs_integral/176.690486;
-    input[17] = global_feature->period/3.272060;
+    input[0] = feature->accel_y_seg0_max/6.0; 
+    input[1] = feature->accel_y_seg0_min/6.0;
+    input[2] = feature->accel_y_seg1_max/6.0;
+    input[3] = feature->accel_y_seg1_min/6.0;
+    input[4] = feature->accel_y_seg2_max/6.0;
+    input[5] = feature->accel_y_seg2_min/6.0;
+    input[6] = feature->accel_y_seg3_max/6.0;
+    input[7] = feature->accel_y_seg3_min/6.0;
+    input[8] = feature->gyro_y_seg0_max/500.0;
+    input[9] = feature->gyro_y_seg0_min/500.0;
+    input[10] = feature->gyro_y_seg1_max/500.0;
+    input[11] = feature->gyro_y_seg1_min/500.0;
+    input[12] = feature->gyro_y_seg2_max/500.0;
+    input[13] = feature->gyro_y_seg2_min/500.0;
+    input[14] = feature->gyro_y_seg3_max/500.0;
+    input[15] = feature->gyro_y_seg3_min/500.0;
+    input[16] = feature->gyro_y_abs_integral/176.690486;
+    input[17] = feature->period/3.272060;
 
     /*Caluculate the type predicted by our trained network*/
     calc_out = fann_run(global_ann, input);
@@ -54,7 +58,7 @@ int exe_global_neural_network(const GlobalFeature *global_feature)
     return location;
 }
 
-int exe_turn_neural_network(const TurnFeature *turn_feature)
+int exe_turn_neural_network(const TurnFeature *feature)
 {
     int i;
     int location;
@@ -67,19 +71,105 @@ int exe_turn_neural_network(const TurnFeature *turn_feature)
     /* parse the feature data*/
 
 
-    input[0] = turn_feature->gyro_y_seg0_max/500.0;
-    input[1] = turn_feature->gyro_y_seg0_min/500.0;
-    input[2] = turn_feature->gyro_y_seg1_max/500.0;
-    input[3] = turn_feature->gyro_y_seg1_min/500.0;
-    input[4] = turn_feature->gyro_y_seg2_max/500.0;
-    input[5] = turn_feature->gyro_y_seg2_min/500.0;
-    input[6] = turn_feature->gyro_y_seg3_max/500.0;
-    input[7] = turn_feature->gyro_y_seg3_min/500.0;
-    input[8] = turn_feature->gyro_y_integral/176.690486;
-
+    input[0] = feature->gyro_y_seg0_max/500.0;
+    input[1] = feature->gyro_y_seg0_min/500.0;
+    input[2] = feature->gyro_y_seg1_max/500.0;
+    input[3] = feature->gyro_y_seg1_min/500.0;
+    input[4] = feature->gyro_y_seg2_max/500.0;
+    input[5] = feature->gyro_y_seg2_min/500.0;
+    input[6] = feature->gyro_y_seg3_max/500.0;
+    input[7] = feature->gyro_y_seg3_min/500.0;
+    input[8] = feature->gyro_y_integral/176.690486;
 
     /*Caluculate the type predicted by our trained network*/
     calc_out = fann_run(turn_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}
+
+
+int exe_walk_neural_network(const WalkFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[13];
+   
+    max = -100;
+    /* parse the feature data*/
+
+
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg0_rms/6.0;
+
+    input[3] = feature->accel_x_seg1_max/6.0;
+    input[4] = feature->accel_x_seg1_min/6.0;
+    input[5] = feature->accel_x_seg1_rms/6.0;
+
+    input[6] = feature->accel_x_seg2_max/6.0;
+    input[7] = feature->accel_x_seg2_min/6.0;
+    input[8] = feature->accel_x_seg2_rms/6.0;
+
+    input[9] = feature->accel_x_seg3_max/6.0;
+    input[10] = feature->accel_x_seg3_min/6.0;
+    input[11] = feature->accel_x_seg3_rms/6.0;
+
+    input[12] = feature->period/3.272060;
+
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(walk_ann, input);
+    for (i = 0; i < 3; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}
+
+
+int exe_stair_neural_network(const StairFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[16];
+   
+    max = -100;
+    /* parse the feature data*/
+
+
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg1_max/6.0;
+    input[3] = feature->accel_x_seg1_min/6.0;
+    input[4] = feature->accel_x_seg2_max/6.0;
+    input[5] = feature->accel_x_seg2_min/6.0;
+    input[6] = feature->accel_x_seg3_max/6.0;
+    input[7] = feature->accel_x_seg3_min/6.0;
+
+    input[8] = feature->accel_y_seg0_max/6.0;
+    input[9] = feature->accel_y_seg0_min/6.0;
+    input[10] = feature->accel_y_seg1_max/6.0;
+    input[11] = feature->accel_y_seg1_min/6.0;
+    input[12] = feature->accel_y_seg2_max/6.0;
+    input[13] = feature->accel_y_seg2_min/6.0;
+    input[14] = feature->accel_y_seg3_max/6.0;
+    input[15] = feature->accel_y_seg3_min/6.0;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(stair_ann, input);
     for (i = 0; i < 2; i++) {
         if (calc_out[i] > max) {
             max = calc_out[i];

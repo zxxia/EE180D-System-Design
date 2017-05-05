@@ -156,8 +156,9 @@ int process_file(const char *fname, float pk_threshold) {
 	//Collect features
 	printf("Attempting to collect features for neural networks...\n");
 	GlobalFeature* global_feature = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
-	TurnFeature* turn_feature = (TurnFeature*) malloc(sizeof(WalkFeature) * n_S-1);
-
+	TurnFeature* turn_feature = (TurnFeature*) malloc(sizeof(TurnFeature) * n_S-1);
+	WalkFeature* walk_feature = (WalkFeature*) malloc(sizeof(WalkFeature) * n_S-1);
+	StairFeature* stair_feature = (StairFeature*) malloc(sizeof(StairFeature) * n_S-1);
 
 	int pos[5];
 	for(i = 0; i< n_S-1; i++){
@@ -166,6 +167,8 @@ int process_file(const char *fname, float pk_threshold) {
 		//Extract features
 		extract_global_feature(&global_feature[i], pos, accel_y, gyro_y, time);
 		extract_turn_feature(&turn_feature[i], pos, gyro_y, time);
+		extract_walk_feature(&walk_feature[i], pos, accel_x, time);
+		extract_stair_feature(&stair_feature[i], pos, accel_x, accel_y, time);
 	}
 
 	// Construct and initialize neuralnetworks	
@@ -174,6 +177,8 @@ int process_file(const char *fname, float pk_threshold) {
 	//Execute neural network
 	int motion_type;
 	int turn_direction;
+	int walk_speed;
+	int stair_direction;
 
 	for(i = 0; i < n_S - 1; i++){
 		motion_type = exe_global_neural_network(&global_feature[i]);
@@ -196,12 +201,32 @@ int process_file(const char *fname, float pk_threshold) {
 			
 			
 			case WALK:
-			printf("Got Input values -> Movement type is Walking\n");
+			walk_speed = exe_walk_neural_network(&walk_feature[i]);
+			switch (walk_speed){
+				case SLOW_WALK:
+				printf("Got Input values -> Movement type is Slow Walking\n");
+				break;
+				case MED_WALK:
+				printf("Got Input values -> Movement type is Medium Walking\n");
+				break;
+				case FAST_WALK:
+				printf("Got Input values -> Movement type is Fast Walking\n");
+				break;
+			}
 			break;
 			
 			
 			case STAIR:
-			printf("Got Input values -> Movement type is Stairs\n");
+			stair_direction = exe_stair_neural_network(&stair_feature[i]);
+			switch(stair_direction){
+				case UP_STAIR:
+				printf("Got Input values -> Movement type is Stairs Up\n");
+				break;
+
+				case DOWN_STAIR:
+				printf("Got Input values -> Movement type is Stairs Down\n");
+				break;
+			}
 			break;
 			
 			

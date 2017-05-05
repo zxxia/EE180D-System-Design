@@ -48,17 +48,26 @@ typedef struct{
 
 typedef struct
 {
-	double accel_x_seg0_mean;
-	double accel_x_seg0_var;
-	double accel_x_seg1_mean;
-	double accel_x_seg1_var;
-	double accel_x_seg2_mean;
-	double accel_x_seg2_var;
-	double accel_x_seg3_mean;
-	double accel_x_seg3_var;
+	double accel_x_seg0_max, accel_x_seg0_min, accel_x_seg0_rms;
+	double accel_x_seg1_max, accel_x_seg1_min, accel_x_seg1_rms;
+	double accel_x_seg2_max, accel_x_seg2_min, accel_x_seg2_rms;
+	double accel_x_seg3_max, accel_x_seg3_min, accel_x_seg3_rms;
 	double period;
 } WalkFeature;
 
+
+typedef struct
+{
+	double accel_x_seg0_max, accel_x_seg0_min;
+	double accel_x_seg1_max, accel_x_seg1_min;
+	double accel_x_seg2_max, accel_x_seg2_min;
+	double accel_x_seg3_max, accel_x_seg3_min;
+
+	double accel_y_seg0_max, accel_y_seg0_min;
+	double accel_y_seg1_max, accel_y_seg1_min;
+	double accel_y_seg2_max, accel_y_seg2_min;
+	double accel_y_seg3_max, accel_y_seg3_min;
+} StairFeature;
 
 
 
@@ -70,11 +79,10 @@ void extract_turn_feature(TurnFeature* feature, int *pos, double* gyro_y, double
 
 void extract_walk_feature(WalkFeature* feature, int *pos, double* accel_x, double* time);
 
-/*
-void stair_feature(double* accel_y, double* gyro_y,
-	double* time, int* S_i, int n_S, char* ofile_maxmin_name, 
-	char* ofile_stair_feature_name);
-void jump_feature(double* accel_y, double* gyro_y,
+void extract_stair_feature(StairFeature* feature, int* pos, double* accel_x, double* accel_y, double* time);
+
+
+/*void jump_feature(double* accel_y, double* gyro_y,
 	double* time, int* S_i, int n_S, char* ofile_maxmin_name, 
 	char* ofile_jump_feature_name);
 void run_feature(double* accel_y, double* gyro_y,

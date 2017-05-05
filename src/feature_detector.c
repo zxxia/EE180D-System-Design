@@ -57,14 +57,51 @@ void extract_turn_feature(TurnFeature* feature, int* pos, double *gyro_y, double
 void extract_walk_feature(WalkFeature *feature, int *pos, double *accel_x, double *time)
 {
 	// Extract features
-	mean(accel_x, pos[0], pos[1], &feature->accel_x_seg0_mean);
-	variance(accel_x, pos[0], pos[1], &feature->accel_x_seg0_var);
-	mean(accel_x, pos[1], pos[2], &feature->accel_x_seg1_mean);
-	variance(accel_x, pos[1], pos[2], &feature->accel_x_seg1_var);
-	mean(accel_x, pos[2], pos[3], &feature->accel_x_seg2_mean);
-	variance(accel_x, pos[2], pos[3], &feature->accel_x_seg2_var);
-	mean(accel_x, pos[3], pos[4], &feature->accel_x_seg3_mean);
-	variance(accel_x, pos[3], pos[4], &feature->accel_x_seg3_var);
-
+	max(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_max));
+	min(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_min));
+	rms(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_rms));
+	
+	max(accel_x, pos[1], pos[2], &(feature->accel_x_seg1_max));
+	min(accel_x, pos[1], pos[2], &(feature->accel_x_seg1_min));
+	rms(accel_x, pos[1], pos[2], &(feature->accel_x_seg1_rms));
+	
+	max(accel_x, pos[2], pos[3], &(feature->accel_x_seg2_max));
+	min(accel_x, pos[2], pos[3], &(feature->accel_x_seg2_min));
+	rms(accel_x, pos[2], pos[3], &(feature->accel_x_seg2_rms));
+	
+	max(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_max));
+	min(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_min));
+	rms(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_rms));
+	
 	feature->period = time[pos[4]] - time[pos[0]];
+}
+
+
+void extract_stair_feature(StairFeature *feature, int *pos, double *accel_x, double *accel_y, double *time)
+{
+	// Extract features
+	max(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_max));
+	min(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_min));
+	
+	max(accel_x, pos[1], pos[2], &(feature->accel_x_seg1_max));
+	min(accel_x, pos[1], pos[2], &(feature->accel_x_seg1_min));
+	
+	max(accel_x, pos[2], pos[3], &(feature->accel_x_seg2_max));
+	min(accel_x, pos[2], pos[3], &(feature->accel_x_seg2_min));
+	
+	max(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_max));
+	min(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_min));
+	
+
+	max(accel_y, pos[0], pos[1], &(feature->accel_y_seg0_max));
+	min(accel_y, pos[0], pos[1], &(feature->accel_y_seg0_min));
+	
+	max(accel_y, pos[1], pos[2], &(feature->accel_y_seg1_max));
+	min(accel_y, pos[1], pos[2], &(feature->accel_y_seg1_min));
+	
+	max(accel_y, pos[2], pos[3], &(feature->accel_y_seg2_max));
+	min(accel_y, pos[2], pos[3], &(feature->accel_y_seg2_min));
+
+	max(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_max));
+	min(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_min));
 }

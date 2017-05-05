@@ -153,8 +153,8 @@ int process_file(const char *fname, float pk_threshold) {
 	}
 	
 
-	//Collect global features
-	printf("Attempting to collect features for global classifier...\n");
+	//Collect features
+	printf("Attempting to collect features for neural networks...\n");
 	GlobalFeature* global_feature = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
 	TurnFeature* turn_feature = (TurnFeature*) malloc(sizeof(WalkFeature) * n_S-1);
 

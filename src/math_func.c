@@ -1,5 +1,6 @@
 #include "math_func.h"
 
+// Maximum
 void max(double* data, int start_pos, int end_pos, double* max_val)
 {
 	int i;
@@ -10,6 +11,7 @@ void max(double* data, int start_pos, int end_pos, double* max_val)
 	}
 }
 
+// Minimum
 void min(double* data, int start_pos, int end_pos, double* min_val)
 {
 	int i;
@@ -32,7 +34,7 @@ void mean(double* data, int start_pos, int end_pos, double* mean_val)
 	*mean_val = sum / (double)totalPos;
 }
 
-//Variance feature
+//Variance
 void variance(double* data, int start_pos, int end_pos, double* var)
 {
 	int i;
@@ -45,7 +47,7 @@ void variance(double* data, int start_pos, int end_pos, double* var)
 	*var = sum / (double)totalPos;
 }
 
-//STD
+//Standard deviation
 void std(double* data, int start_pos, int end_pos, double* std_val)
 {
 	double var;
@@ -53,7 +55,7 @@ void std(double* data, int start_pos, int end_pos, double* std_val)
 	*std_val = sqrt(var);
 }
 
-//RMS
+//Root-mean-square
 void rms(double* data, int start_pos, int end_pos, double* rms_val)
 {
 	int i;
@@ -65,7 +67,7 @@ void rms(double* data, int start_pos, int end_pos, double* rms_val)
 	*rms_val = pow((sum / (double)totalPos), 0.5);
 }
 
-//MAD
+//Mean absolute deviation
 void mad(double* data, int start_pos, int end_pos, double* mad_val)
 {
 	int i;
@@ -78,6 +80,7 @@ void mad(double* data, int start_pos, int end_pos, double* mad_val)
 	*mad_val = sum / (double)totalPos;
 }
 
+
 //Numerical Integration using Trapezoid Method
 void integral(double* data, double* time, int start_pos, int end_pos, double* integral_val)
 {
@@ -89,10 +92,6 @@ void integral(double* data, double* time, int start_pos, int end_pos, double* in
 }
 
 //Max-min ratio
-
 //Skewness?????Not a good one????
 //Kurtosis?????Consider for later
 //Correlation??????????
-
-// Divide the stride into 4 segmentations
-// Extract max min on each segmentation

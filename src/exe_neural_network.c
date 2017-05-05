@@ -3,11 +3,13 @@
 void init_networks()
 {
     global_ann = fann_create_from_file("GLOBAL.net");
+    turn_ann = fann_create_from_file("TURN.net");
 }
 
 void destroy_networks()
 {
     fann_destroy(global_ann);
+    fann_destroy(turn_ann);
 }
 
 int exe_global_neural_network(const GlobalFeature *global_feature)
@@ -50,97 +52,39 @@ int exe_global_neural_network(const GlobalFeature *global_feature)
         }
     }
     return location;
-
-    /*switch(location) {
-        case TURN_CASE:
-            printf("Got Input values -> Movement type is %s\n", "Turning");
-            return TURN_CASE;
-        case WALK_CASE:
-            printf("Got Input values -> Movement type is %s\n", "Walking");
-            return WALK_CASE;
-        case STAIR_CASE:
-            printf("Got Input values -> Movement type is %s\n", "Stairs");
-            return STAIR_CASE;
-        case RUN_CASE:
-            return RUN_CASE;
-        case JUMP_CASE:
-            printf("Got Input values -> Movement type is %s\n", "Jumping");
-            return JUMP_CASE;
-    }*/
 }
 
-int exe_walk_neural_network(const char *walk_feature_file)
+int exe_turn_neural_network(const TurnFeature *turn_feature)
 {
     int i;
     int location;
 
-    float max;
+    double max;
     fann_type *calc_out;
     fann_type input[9];
-    struct fann *ann;
-
-    FILE *fp;
-    fp = fopen(walk_feature_file, "r+");
-    //int answer[3] = {-1,-1,-1};
-    int numLines = 0;
-    int inN = 0;
-    int outN = 0;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    int rv;
-    //char* str_answer;
-    
-    ann = fann_create_from_file("WALK.net");
+   
+    max = -100;
+    /* parse the feature data*/
 
 
-    /* get number of lines in the file */
-    read = getline(&line, &len, fp);
-    rv = sscanf(line, "%d\t%d\t%d\n", &numLines, &inN, &outN);
-    if (rv != 3) {
-        fprintf(stderr,"Error: Failed to read header line\n");
-        exit(EXIT_FAILURE);
-    }
+    input[0] = turn_feature->gyro_y_seg0_max/500.0;
+    input[1] = turn_feature->gyro_y_seg0_min/500.0;
+    input[2] = turn_feature->gyro_y_seg1_max/500.0;
+    input[3] = turn_feature->gyro_y_seg1_min/500.0;
+    input[4] = turn_feature->gyro_y_seg2_max/500.0;
+    input[5] = turn_feature->gyro_y_seg2_min/500.0;
+    input[6] = turn_feature->gyro_y_seg3_max/500.0;
+    input[7] = turn_feature->gyro_y_seg3_min/500.0;
+    input[8] = turn_feature->gyro_y_integral/176.690486;
 
-    /* start reading the data from the file into the data structures */
-    i = 0;
-    while ((read = getline(&line, &len, fp)) != -1) {
-        max = -100;
-        /* parse the feature data*/
-        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
-            &input[0], &input[1], &input[2],
-            &input[3], &input[4], &input[5],
-            &input[6], &input[7], &input[8]);
-        if (rv != 9) {
-            fprintf(stderr,"Error: Failed to read data line\n");
-            exit(EXIT_FAILURE);
-        }
-        /*Caluculate the type predicted by our trained network*/
-        calc_out = fann_run(ann, input);
-        for (i = 0; i < 3; i++) {
-            if (calc_out[i] > max) {
-                max = calc_out[i];
-                location = i;
-            }
-        }
 
-        switch(location) {
-            case FAST_WALK:
-                printf("\t\tGot Input values -> Walking type is %s\n", "Fast walking");
-                sleep(1);
-                break;
-            case MED_WALK:
-                printf("\t\tGot Input values -> Walking type is %s\n", "Med walking");
-                sleep(1);
-                break;
-            case SLOW_WALK:
-                printf("\t\tGot Input values -> Walking type is %s\n", "Slow walking");
-                sleep(1);
-                break;
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(turn_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
         }
     }
-
-    fclose(fp);
-    fann_destroy(ann);
-    return 0;
+    return location;
 }

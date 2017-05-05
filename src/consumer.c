@@ -155,26 +155,56 @@ int process_file(const char *fname, float pk_threshold) {
 
 	//Collect global features
 	printf("Attempting to collect features for global classifier...\n");
-	GlobalFeature* global_feature;
+	GlobalFeature* global_feature = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
+	TurnFeature* turn_feature = (TurnFeature*) malloc(sizeof(WalkFeature) * n_S-1);
 
-	global_feature = extract_global_feature(accel_y, gyro_y, time, S_i, n_S);
-	
+
+	int pos[5];
+	for(i = 0; i< n_S-1; i++){
+		//segmentation
+		segmentation(pos, S_i[i], S_i[i+1]);
+		//Extract features
+		extract_global_feature(&global_feature[i], pos, accel_y, gyro_y, time);
+		extract_turn_feature(&turn_feature[i], pos, gyro_y, time);
+	}
+
+	// Construct and initialize neuralnetworks	
 	init_networks();
 
+	//Execute neural network
 	int motion_type;
+	int turn_direction;
+
 	for(i = 0; i < n_S - 1; i++){
 		motion_type = exe_global_neural_network(&global_feature[i]);
 
 		switch(motion_type){
+			
 			case TURN:
-			printf("Got Input values -> Movement type is Turning\n");
+			turn_direction = exe_turn_neural_network(&turn_feature[i]);
+			
+			switch(turn_direction){
+				case LEFT_TURN:
+				printf("Got Input values -> Movement type is Left Turning\n");
+				break;
+			
+				case RIGHT_TURN:
+				printf("Got Input values -> Movement type is Right Turning\n");
+				break;
+			}
 			break;
+			
+			
 			case WALK:
 			printf("Got Input values -> Movement type is Walking\n");
 			break;
+			
+			
 			case STAIR:
 			printf("Got Input values -> Movement type is Stairs\n");
 			break;
+			
+			
 			case RUN:
 			printf("Got Input values -> Movement type is Running\n");
 			break;
@@ -182,9 +212,8 @@ int process_file(const char *fname, float pk_threshold) {
 
 	}
 
+	// Destroy all neural networks
 	destroy_networks();
-	//Execute neural network
-	//exe_global_neural_network(ofile_feature_name);
 
 	//close the file to release the lock
 	fclose(fp);

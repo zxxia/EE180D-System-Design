@@ -81,3 +81,48 @@ int find_peaks_and_troughs(
 	return 0;
 }
 
+int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int* S_i)
+{
+	int rv;
+	//Peak and trough variables
+	int *P_i; 	// indicies of each peak found by peak detection
+	int *T_i; 	// indicies of each trough found by trough detection
+	int n_P; 	// number of peaks
+	int n_T; 	// number of troughs
+	int n_S;
+	int i;
+
+	double *temp;
+	double mean_val;
+
+	P_i = (int *) malloc(sizeof(int) * n_samples);
+	T_i = (int *) malloc(sizeof(int) * n_samples);
+
+	//Find peak and trough
+	rv = find_peaks_and_troughs(
+			gyro_z, n_samples, 
+			pk_threshold, P_i, T_i, 
+			&n_P, &n_T);
+
+	if (rv < 0)
+		return -1;
+
+	
+	temp = (double *)malloc(sizeof(double) * n_P);
+
+	for(i = 0; i < n_P; i++){
+		temp[i] = gyro_z[P_i[i]];
+	}
+	mean(temp, 0, n_P, &mean_val);
+
+	n_S = 0;
+	for(i = 0; i < n_P; i++){
+		if(gyro_z[P_i[i]] > mean_val){
+			S_i[n_S] = P_i[i];
+			n_S++;
+		}
+	}
+
+	return n_S;
+}
+

@@ -65,14 +65,8 @@ int process_file(const char *fname, float pk_threshold) {
 	double t1, t2; // variable used to parse time_before and time_after
 	double start_time; // variable used to computer sampling time
 
-	//Peak and trough variables
-	int *P_i; 	// indicies of each peak found by peak detection
-	int *T_i; 	// indicies of each trough found by trough detection
+	
 	int *S_i; 	// indicies of the start of each stride
-	double *temp;
-	double mean_val;
-	int n_P; 	// number of peaks
-	int n_T; 	// number of troughs
 	int n_S = 0; 	// number of strides
 
 	// open the file to inspect
@@ -98,8 +92,7 @@ int process_file(const char *fname, float pk_threshold) {
 	gyro_x = (double*) malloc(sizeof(double) * N_SAMPLES);
 	gyro_y = (double*) malloc(sizeof(double) * N_SAMPLES);
 	gyro_z = (double*) malloc(sizeof(double) * N_SAMPLES);
-	P_i = (int *) malloc(sizeof(int) * N_SAMPLES);
-	T_i = (int *) malloc(sizeof(int) * N_SAMPLES);
+	
 	
 	
 	// Collect raw data
@@ -125,31 +118,15 @@ int process_file(const char *fname, float pk_threshold) {
 		i++;
 	}
 
-	//Find peak and trough
-	rv = find_peaks_and_troughs(
-			gyro_z, 
-			N_SAMPLES, 
-			pk_threshold, 
-			P_i, T_i, 
-			&n_P, &n_T);
-	if (rv < 0) {
-		fprintf(stderr, "find_peaks_and_troughs failed\n");
-		exit(EXIT_FAILURE);
-	}
+	
 
 	//Stride detection
 	printf("Attempting to do stride detection.\n");
-	S_i = (int *) malloc(sizeof(int) * n_P);
-	temp = (double *)malloc(sizeof(double) * n_P);
-	for(i = 0; i < n_P; i++){
-		temp[i] = gyro_z[P_i[i]];
-	}
-	mean(temp, 0, n_P, &mean_val);
-	for(i = 0; i < n_P; i++){
-		if(gyro_z[P_i[i]] > mean_val){
-			S_i[n_S] = P_i[i];
-			n_S++;
-		}
+	S_i = (int *) malloc(sizeof(int) * N_SAMPLES);
+	n_S = stride_detection(gyro_z, N_SAMPLES, pk_threshold, S_i);
+	if(n_S < 0){
+		fprintf(stderr, "find_peaks_and_troughs failed\n");
+		exit(EXIT_FAILURE);
 	}
 	
 

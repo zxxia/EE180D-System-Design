@@ -24,7 +24,7 @@ void extract_global_feature(GlobalFeature* feature, int *pos, double *accel_y, d
 	max(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_max));
 	min(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_min));
 
-	max(gyro_y, pos[0], pos[1], &(feature->gyro_y_seg0_max));
+/*	max(gyro_y, pos[0], pos[1], &(feature->gyro_y_seg0_max));
 	min(gyro_y, pos[0], pos[1], &(feature->gyro_y_seg0_min));
 	max(gyro_y, pos[1], pos[2], &(feature->gyro_y_seg1_max));
 	min(gyro_y, pos[1], pos[2], &(feature->gyro_y_seg1_min));
@@ -32,7 +32,7 @@ void extract_global_feature(GlobalFeature* feature, int *pos, double *accel_y, d
 	min(gyro_y, pos[2], pos[3], &(feature->gyro_y_seg2_min));
 	max(gyro_y, pos[3], pos[4], &(feature->gyro_y_seg3_max));
 	min(gyro_y, pos[3], pos[4], &(feature->gyro_y_seg3_min));
-		
+*/		
 	integral(gyro_y, time, pos[0], pos[4], &(feature->gyro_y_abs_integral));
 	feature->gyro_y_abs_integral = fabs(feature->gyro_y_abs_integral);
 

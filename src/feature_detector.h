@@ -20,14 +20,14 @@ typedef struct
 	double accel_y_seg3_max;
 	double accel_y_seg3_min;
 
-	double gyro_y_seg0_max;
+	/*double gyro_y_seg0_max;
 	double gyro_y_seg0_min;
 	double gyro_y_seg1_max;
 	double gyro_y_seg1_min;
 	double gyro_y_seg2_max;
 	double gyro_y_seg2_min;
 	double gyro_y_seg3_max;
-	double gyro_y_seg3_min;
+	double gyro_y_seg3_min;*/
 
 	double gyro_y_abs_integral;
 	double period;

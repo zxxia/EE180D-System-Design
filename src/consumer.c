@@ -5,6 +5,7 @@
 /* for exit() */
 #include <stdlib.h>
 #include <sys/file.h>
+#include <signal.h>
 
 #include "feature_detector.h"
 #include "stride_detector.h"
@@ -12,8 +13,26 @@
 #include "exe_neural_network.h"
 
 
-
 #define BUFF_SIZE 1024
+
+sig_atomic_t volatile run_flag = 1;
+
+void do_when_interrupted(int sig) {
+	if (sig == SIGINT)
+		run_flag = 0;
+}
+
+void clean_file(FILE *fp, const char *fname)
+{
+	char delete_file[1024];
+	memset(delete_file, 0, 1024);
+	//close the file to release the lock
+	if(fp != NULL)
+		fclose(fp);
+	// delete this file so we don't process it again in the future
+	sprintf(delete_file, "rm %s", fname);
+	system(delete_file);
+}
 
 
 int count_samples(FILE *fp) {
@@ -45,23 +64,18 @@ int process_file(const char *fname, float pk_threshold) {
 	int rv;
 
 	//Variables for file
-	char delete_file[1024];
+	
 	FILE *fp;
 	int fd;
 	int N_SAMPLES;
 	char * line = NULL;
 	size_t len = 0;
 	ssize_t read;
-	memset(delete_file, 0, 1024);
 
 	//Original Data Containers
-	double* time;
-	double* accel_x;
-	double* accel_y;
-	double* accel_z;
-	double* gyro_x;
-	double* gyro_y;
-	double* gyro_z;
+	double *time;
+	double *accel_x, *accel_y, *accel_z;
+	double *gyro_x, *gyro_y, *gyro_z;
 	double t1, t2; // variable used to parse time_before and time_after
 	double start_time; // variable used to computer sampling time
 
@@ -70,11 +84,12 @@ int process_file(const char *fname, float pk_threshold) {
 	int n_S = 0; 	// number of strides
 
 	// open the file to inspect
-	printf("\tOpening file \'%s\'\n", fname);
+	//printf("\tOpening file \'%s\'\n", fname);
 	fp = fopen(fname, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Failed to open file \'%s\'. Exiting.\n", fname);
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "Failed to open file \'%s\'.\n", fname);
+		clean_file(fp, fname);
+		return -1;;
 	}
 
 	// acquire the lock for the file (incase the producer is still writing to it)
@@ -96,20 +111,17 @@ int process_file(const char *fname, float pk_threshold) {
 	
 	
 	// Collect raw data
-	printf("\tAcquired lock. Printing file contents of \'%s\':\n", fname);
+	//printf("\tAcquired lock. Printing file contents of \'%s\':\n", fname);
 	read = getline(&line, &len, fp); //discard header of file
 	while ((read = getline(&line, &len, fp)) != -1) {
 		/* parse the data */
 		rv = sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", &t1, &t2, &accel_x[i], &accel_y[i], &accel_z[i], &gyro_x[i], &gyro_y[i], &gyro_z[i]);
 		if (rv != 8) {
-			fprintf(stderr,
-					"%s %d \'%s\'. %s.\n",
+			fprintf(stderr, "%s %d \'%s\'.\n",
 					"Failed to read line",
-					i,
-					line,
-					"Exiting"
-			       );
-			exit(EXIT_FAILURE);
+					i,line);
+			clean_file(fp, fname);
+			return -1;
 		}
 		if(i == 0)
 			start_time = t1;
@@ -118,20 +130,22 @@ int process_file(const char *fname, float pk_threshold) {
 		i++;
 	}
 
+	clean_file(fp, fname);
+
 	
 
 	//Stride detection
-	printf("Attempting to do stride detection.\n");
+	//printf("Attempting to do stride detection.\n");
 	S_i = (int *) malloc(sizeof(int) * N_SAMPLES);
 	n_S = stride_detection(gyro_z, N_SAMPLES, pk_threshold, S_i);
 	if(n_S < 0){
 		fprintf(stderr, "find_peaks_and_troughs failed\n");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	
 
 	//Collect features
-	printf("Attempting to collect features for neural networks...\n");
+	//printf("Attempting to collect features for neural networks...\n");
 	GlobalFeature* global_feature = (GlobalFeature*) malloc(sizeof(GlobalFeature) * n_S-1);
 	TurnFeature* turn_feature = (TurnFeature*) malloc(sizeof(TurnFeature) * n_S-1);
 	WalkFeature* walk_feature = (WalkFeature*) malloc(sizeof(WalkFeature) * n_S-1);
@@ -148,8 +162,6 @@ int process_file(const char *fname, float pk_threshold) {
 		extract_stair_feature(&stair_feature[i], pos, accel_x, accel_y, time);
 	}
 
-	// Construct and initialize neuralnetworks	
-	init_networks();
 
 	//Execute neural network
 	int motion_type;
@@ -167,11 +179,11 @@ int process_file(const char *fname, float pk_threshold) {
 			
 			switch(turn_direction){
 				case LEFT_TURN:
-				printf("Got Input values -> Movement type is Left Turning\n");
+				printf("Movement type is Left Turning\n");
 				break;
 			
 				case RIGHT_TURN:
-				printf("Got Input values -> Movement type is Right Turning\n");
+				printf("Movement type is Right Turning\n");
 				break;
 			}
 			break;
@@ -181,13 +193,13 @@ int process_file(const char *fname, float pk_threshold) {
 			walk_speed = exe_walk_neural_network(&walk_feature[i]);
 			switch (walk_speed){
 				case SLOW_WALK:
-				printf("Got Input values -> Movement type is Slow Walking\n");
+				printf("Movement type is Slow Walking\n");
 				break;
 				case MED_WALK:
-				printf("Got Input values -> Movement type is Medium Walking\n");
+				printf("Movement type is Medium Walking\n");
 				break;
 				case FAST_WALK:
-				printf("Got Input values -> Movement type is Fast Walking\n");
+				printf("Movement type is Fast Walking\n");
 				break;
 			}
 			break;
@@ -197,31 +209,22 @@ int process_file(const char *fname, float pk_threshold) {
 			stair_direction = exe_stair_neural_network(&stair_feature[i]);
 			switch(stair_direction){
 				case UP_STAIR:
-				printf("Got Input values -> Movement type is Stairs Up\n");
+				printf("Movement type is Stairs Up\n");
 				break;
 
 				case DOWN_STAIR:
-				printf("Got Input values -> Movement type is Stairs Down\n");
+				printf("Movement type is Stairs Down\n");
 				break;
 			}
 			break;
 			
 			
 			case RUN:
-			printf("Got Input values -> Movement type is Running\n");
+			printf("Movement type is Running\n");
 			break;
 		}
 
 	}
-
-	// Destroy all neural networks
-	destroy_networks();
-
-	//close the file to release the lock
-	fclose(fp);
-	// delete this file so we don't process it again in the future
-	//sprintf(delete_file, "rm %s", fname);
-	//system(delete_file);
 
 
 	return 1;
@@ -240,8 +243,10 @@ int main(int argc, char **argv)
 	float pk_threshold;
 
 	pk_threshold = atof(argv[1]);
+	// Construct and initialize neuralnetworks	
+	init_networks();
 
-	while (1) {
+	while (run_flag) {
 		system("ls -1 file_*.csv > fnames.txt");
 		// open the file that contains the file names that we need to inspect
 		fp = fopen("fnames.txt", "r");
@@ -250,21 +255,24 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 		while ((read = getline(&line, &len, fp)) != -1) {
-			printf("Discovered file \'%s\'", line);
+			//printf("Discovered file \'%s\'", line);
 			// strip newline from end of line read from file
 			fname = line;
 			fname[strlen(line)-1] = 0;
 			// process file with fname
-			printf("Processing file \'%s\'", fname);
+			//printf("Processing file \'%s\'", fname);
 			process_file(fname, pk_threshold);
+			//usleep(200);
 
-			sleep(1);
 		}
 		// close the file that contains other filenames
 		fclose(fp);
 		// delete this file from the system
 		system("rm fnames.txt");
-		sleep(2);
+		//sleep(1);
 	}
+	// Destroy all neural networks
+	destroy_networks();
+
 	return EXIT_SUCCESS;
 }

@@ -29,7 +29,7 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 	data_t ad, gd;
 	
 	//timer variable
-	int sec = 0, trigger = 2;
+	int sec = 0, trigger = 1;
 	
 	//Variables for file
 	int fd;
@@ -102,7 +102,6 @@ int main() {
 
 	while(run_flag) {
 		collect_data(accel, gyro, a_res, g_res);
-		sleep(1);
 	}
 	//Clean up memory
 	exit(EXIT_SUCCESS);

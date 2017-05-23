@@ -130,7 +130,7 @@ int process_file(const char *fname, float pk_threshold) {
 		i++;
 	}
 
-	clean_file(fp, fname);
+//	clean_file(fp, fname);
 
 	
 
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 		// close the file that contains other filenames
 		fclose(fp);
 		// delete this file from the system
-		system("rm fnames.txt");
+		//system("rm fnames.txt");
 		//sleep(1);
 	}
 	// Destroy all neural networks

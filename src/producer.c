@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MILLION 1000000.0
+#define MILLION		1000000.0
+#define BUFF_SIZE	1024
 
 sig_atomic_t volatile run_flag = 1;
 
@@ -30,11 +31,10 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 	
 	//Variables for file
 	int fd;
-	char* file_name;
+	char file_name[BUFF_SIZE];
 	FILE *fp;
 	
-	file_name = malloc(sizeof(char) * 1024);
-	memset(file_name, 0, 1024);
+	memset(file_name, 0, BUFF_SIZE);
 	sprintf(file_name, "file_%ld.csv", time(NULL));
 
 
@@ -71,8 +71,6 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 	//Clean up memory
 	fclose(fp);
 	printf("Close file %s...\n", file_name);
-
-	free(file_name);
 }
 
 int main() {
@@ -100,6 +98,6 @@ int main() {
 	while(run_flag) {
 		collect_data(accel, gyro, a_res, g_res);
 	}
-	//Clean up memory
+
 	exit(EXIT_SUCCESS);
 }

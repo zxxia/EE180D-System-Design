@@ -19,16 +19,6 @@ typedef struct
 	double accel_y_seg2_min;
 	double accel_y_seg3_max;
 	double accel_y_seg3_min;
-
-	/*double gyro_y_seg0_max;
-	double gyro_y_seg0_min;
-	double gyro_y_seg1_max;
-	double gyro_y_seg1_min;
-	double gyro_y_seg2_max;
-	double gyro_y_seg2_min;
-	double gyro_y_seg3_max;
-	double gyro_y_seg3_min;*/
-
 	double gyro_y_abs_integral;
 	double period;
 } GlobalFeature;
@@ -42,7 +32,6 @@ typedef struct{
 	double gyro_y_seg2_min;
 	double gyro_y_seg3_max;
 	double gyro_y_seg3_min;
-
 	double gyro_y_integral;
 } TurnFeature;
 
@@ -73,13 +62,13 @@ typedef struct
 
 void segmentation(int* pos, int start_pos, int end_pos);
 
-void extract_global_feature(GlobalFeature* feature, int* pos, double* accel_y, double* gyro_y, double* time);
+void extract_global_feature(GlobalFeature* feature, int* pos, double* accel_y, double* gyro_y, double* t);
 
-void extract_turn_feature(TurnFeature* feature, int *pos, double* gyro_y, double* time);
+void extract_turn_feature(TurnFeature* feature, int *pos, double* gyro_y, double* t);
 
-void extract_walk_feature(WalkFeature* feature, int *pos, double* accel_x, double* time);
+void extract_walk_feature(WalkFeature* feature, int *pos, double* accel_x, double* t);
 
-void extract_stair_feature(StairFeature* feature, int* pos, double* accel_x, double* accel_y, double* time);
+void extract_stair_feature(StairFeature* feature, int* pos, double* accel_x, double* accel_y, double* t);
 
 
 /*void jump_feature(double* accel_y, double* gyro_y,

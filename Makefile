@@ -1,20 +1,21 @@
 CC=gcc
-LDFLAGS=-lmraa -lfann
-CFLAGS=-Wall -g
+LDFLAGS=-lmraa -lm
+CFLAGS=-Wall -Werror -g
 SRC=src
-SOURCES=${SRC}/math_func.c ${SRC}/stride_detector.c ${SRC}/feature_detector.c ${SRC}/producer.c ${SRC}/consumer.c ${SRC}/exe_neural_network.c
-EXECUTABLES=$(SOURCES:.c=)
+PCLASSES=${SRC}/LSM9DS0.o
+CCLASSES=$(PCLASSES) ${SRC}/math_func.o ${SRC}/stride_detector.o ${SRC}/feature_detector.o ${SRC}/exe_neural_network.o
 
 all: producer consumer
 
-producer: ${SRC}/producer.c ${SRC}/LSM9DS0.c
-	$(CC) $(CFLAGS) -o producer ${SRC}/producer.c ${SRC}/LSM9DS0.c $(LDFLAGS)
+producer: $(PCLASSES)
+	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c $(LDFLAGS)
 
-consumer: ${SRC}/consumer.c ${SRC}/stride_detector.c ${SRC}/feature_detector.c ${SRC}/math_func.c ${SRC}/exe_neural_network.c
-	$(CC) $(CFLAGS) -o consumer ${SRC}/consumer.c ${SRC}/feature_detector.c ${SRC}/stride_detector.c ${SRC}/math_func.c ${SRC}/exe_neural_network.c -lm $(LDFLAGS)
+consumer: $(CCLASSES)
+	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c $(LDFLAGS) -lfann
 
 
 clean: 
 	rm -f producer consumer
 	rm -f *~
-	rm -f src/*~
+	rm -f ${SRC}/*~ ${SRC}/*.o
+	rm -f .*.un~

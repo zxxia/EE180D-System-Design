@@ -12,7 +12,7 @@ void segmentation(int* pos, int start_pos, int end_pos)
 	pos[4] = end_pos;
 }
 
-void extract_global_feature(GlobalFeature* feature, int *pos, double *accel_y, double *gyro_y, double *time)
+void extract_global_feature(GlobalFeature* feature, int *pos, double *accel_y, double *gyro_y, double *t)
 {
 	// Extract features
 	max(accel_y, pos[0], pos[1], &(feature->accel_y_seg0_max));
@@ -24,13 +24,13 @@ void extract_global_feature(GlobalFeature* feature, int *pos, double *accel_y, d
 	max(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_max));
 	min(accel_y, pos[3], pos[4], &(feature->accel_y_seg3_min));
 	
-	integral(gyro_y, time, pos[0], pos[4], &(feature->gyro_y_abs_integral));
+	integral(gyro_y, t, pos[0], pos[4], &(feature->gyro_y_abs_integral));
 	feature->gyro_y_abs_integral = fabs(feature->gyro_y_abs_integral);
 
-	feature->period = time[pos[4]] - time[pos[0]];
+	feature->period = t[pos[4]] - t[pos[0]];
 }
 
-void extract_turn_feature(TurnFeature* feature, int* pos, double *gyro_y, double *time)
+void extract_turn_feature(TurnFeature* feature, int* pos, double *gyro_y, double *t)
 {
 	// Extract features
 	max(gyro_y, pos[0], pos[1], &(feature->gyro_y_seg0_max));
@@ -42,10 +42,10 @@ void extract_turn_feature(TurnFeature* feature, int* pos, double *gyro_y, double
 	max(gyro_y, pos[3], pos[4], &(feature->gyro_y_seg3_max));
 	min(gyro_y, pos[3], pos[4], &(feature->gyro_y_seg3_min));
 
-	integral(gyro_y, time, pos[0], pos[4], &(feature->gyro_y_integral));
+	integral(gyro_y, t, pos[0], pos[4], &(feature->gyro_y_integral));
 }
 
-void extract_walk_feature(WalkFeature *feature, int *pos, double *accel_x, double *time)
+void extract_walk_feature(WalkFeature *feature, int *pos, double *accel_x, double *t)
 {
 	// Extract features
 	max(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_max));
@@ -64,11 +64,11 @@ void extract_walk_feature(WalkFeature *feature, int *pos, double *accel_x, doubl
 	min(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_min));
 	rms(accel_x, pos[3], pos[4], &(feature->accel_x_seg3_rms));
 	
-	feature->period = time[pos[4]] - time[pos[0]];
+	feature->period = t[pos[4]] - t[pos[0]];
 }
 
 
-void extract_stair_feature(StairFeature *feature, int *pos, double *accel_x, double *accel_y, double *time)
+void extract_stair_feature(StairFeature *feature, int *pos, double *accel_x, double *accel_y, double *t)
 {
 	// Extract features
 	max(accel_x, pos[0], pos[1], &(feature->accel_x_seg0_max));

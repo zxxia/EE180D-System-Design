@@ -1,27 +1,27 @@
-#ifndef __EXE_NEURAL_NETWORK_H__
-#define __EXE_NEURAL_NETWORK_H__
+#ifndef EXE_NEURAL_NETWORK_H
+#define EXE_NEURAL_NETWORK_H
 #include <unistd.h>
 #include <mraa/aio.h>
 #include <stdio.h>
 #include "floatfann.h"
 #include "feature_detector.h"
 
-#define TURN 0
-#define WALK 1
-#define STAIR 2
-#define RUN 3
-#define JUMP 4
+#define TURN	0
+#define WALK	1
+#define STAIR	2
+#define RUN	3
+#define JUMP	4
 
 
-#define LEFT_TURN 0
-#define RIGHT_TURN 1
+#define LEFT_TURN	0
+#define RIGHT_TURN	1
 
-#define UP_STAIR 0
-#define DOWN_STAIR 1
+#define UP_STAIR	0
+#define DOWN_STAIR	1
 
-#define SLOW_WALK 0
-#define MED_WALK 1
-#define FAST_WALK 2
+#define SLOW_WALK	0
+#define MED_WALK	1
+#define FAST_WALK	2
 
 struct fann *global_ann;
 struct fann *turn_ann;

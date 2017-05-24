@@ -36,14 +36,6 @@ int exe_global_neural_network(const GlobalFeature *feature)
     input[5] = feature->accel_y_seg2_min/6.0;
     input[6] = feature->accel_y_seg3_max/6.0;
     input[7] = feature->accel_y_seg3_min/6.0;
-    /*input[8] = feature->gyro_y_seg0_max/500.0;
-    input[9] = feature->gyro_y_seg0_min/500.0;
-    input[10] = feature->gyro_y_seg1_max/500.0;
-    input[11] = feature->gyro_y_seg1_min/500.0;
-    input[12] = feature->gyro_y_seg2_max/500.0;
-    input[13] = feature->gyro_y_seg2_min/500.0;
-    input[14] = feature->gyro_y_seg3_max/500.0;
-    input[15] = feature->gyro_y_seg3_min/500.0;*/
     input[8] = feature->gyro_y_abs_integral/176.690486;
     input[9] = feature->period/3.272060;
 

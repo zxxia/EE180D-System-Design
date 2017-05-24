@@ -1,5 +1,5 @@
-#ifndef __STRIDE_DETECTOR_H__
-#define __STRIDE_DETECTOR_H__
+#ifndef STRIDE_DETECTOR_H
+#define STRIDE_DETECTOR_H
 /* for file and terminal I/O */
 #include <stdio.h>
 /* for string manip */
@@ -9,6 +9,9 @@
 /* for fabsf() */
 #include <math.h>
 #include "math_func.h"
+
+
+
 int find_peaks_and_troughs(
 		double* arr, 	// signal 
 		int n_samples, 	// number of samples present in the signal
@@ -21,6 +24,6 @@ int find_peaks_and_troughs(
 		int *n_P, int *n_T
 		);
 
-int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int *S_i);
+int stride_detection(double *gyro_z, int n_samples, int *S_i);
 
 #endif

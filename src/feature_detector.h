@@ -1,5 +1,5 @@
-#ifndef __FEATURE_DETECTOR_H__
-#define __FEATURE_DETECTOR_H__
+#ifndef FEATURE_DETECTOR_H
+#define FEATURE_DETECTOR_H
 /* for file and terminal I/O */
 #include <stdio.h>
 /* for string manip */

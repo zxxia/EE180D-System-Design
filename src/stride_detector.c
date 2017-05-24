@@ -1,4 +1,5 @@
 #include "stride_detector.h"
+
 /*
  * sets first <n> values in <*arr> to <val>
  */
@@ -81,7 +82,7 @@ int find_peaks_and_troughs(
 	return 0;
 }
 
-int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int* S_i)
+int stride_detection(double *gyro_z, int n_samples, int* S_i)
 {
 	int rv;
 	//Peak and trough variables
@@ -95,6 +96,8 @@ int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int* S_i)
 	double *temp;
 	double mean_val;
 
+	const float pk_threshold = 50.0;
+
 	P_i = (int *) malloc(sizeof(int) * n_samples);
 	T_i = (int *) malloc(sizeof(int) * n_samples);
 
@@ -104,8 +107,11 @@ int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int* S_i)
 			pk_threshold, P_i, T_i, 
 			&n_P, &n_T);
 
-	if (rv < 0)
+	if (rv < 0){
+		free(P_i);
+		free(T_i);
 		return -1;
+	}
 
 	
 	temp = (double *)malloc(sizeof(double) * n_P);
@@ -122,6 +128,10 @@ int stride_detection(double *gyro_z, int n_samples, int pk_threshold, int* S_i)
 			n_S++;
 		}
 	}
+
+	free(temp);
+	free(P_i);
+	free(T_i);
 
 	return n_S;
 }

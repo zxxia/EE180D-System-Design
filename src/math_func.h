@@ -1,5 +1,5 @@
-#ifndef __MATH_FUNC_H__
-#define __MATH_FUNC_H__
+#ifndef MATH_FUNC_H
+#define MATH_FUNC_H
 /* for fabsf() */
 #include <math.h>
 

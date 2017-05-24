@@ -1,9 +1,6 @@
-
 #include <stdio.h>
 #include <mraa/i2c.h>
 #include "LSM9DS0.h"
-#include <math.h>
-
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>

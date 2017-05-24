@@ -1,5 +1,5 @@
 CC=gcc
-LDFLAGS=-lmraa -lm
+LDFLAGS=-lmraa -lm -lfann
 CFLAGS=-Wall -Werror -g
 SRC=src
 PCLASSES=${SRC}/LSM9DS0.o
@@ -8,10 +8,10 @@ CCLASSES=$(PCLASSES) ${SRC}/math_func.o ${SRC}/stride_detector.o ${SRC}/feature_
 all: producer consumer
 
 producer: $(PCLASSES)
-	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c -lmraa
 
 consumer: $(CCLASSES)
-	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c $(LDFLAGS) -lfann
+	$(CC) $(CFLAGS) -o $@ $^ ${SRC}/$@.c $(LDFLAGS)
 
 
 clean: 

@@ -82,7 +82,7 @@ int find_peaks_and_troughs(
 	return 0;
 }
 
-int stride_detection(double *gyro_z, int n_samples, int* S_i)
+int stride_detection(double *t, double *gyro_z, int n_samples, int* S_i)
 {
 	int rv;
 	//Peak and trough variables
@@ -95,6 +95,8 @@ int stride_detection(double *gyro_z, int n_samples, int* S_i)
 
 	double *temp;
 	double mean_val;
+	double std_val;
+	double std_mean_ratio;
 
 	const float pk_threshold = 50.0;
 
@@ -120,12 +122,15 @@ int stride_detection(double *gyro_z, int n_samples, int* S_i)
 		temp[i] = gyro_z[P_i[i]];
 	}
 	mean(temp, 0, n_P, &mean_val);
-
+	std(temp, 0, n_P, &std_val);
+	std_mean_ratio = std_val/mean_val;
 	n_S = 0;
 	for(i = 0; i < n_P; i++){
-		if(gyro_z[P_i[i]] > mean_val){
-			S_i[n_S] = P_i[i];
-			n_S++;
+		if(std_mean_ratio < 0.5 || gyro_z[P_i[i]] > mean_val){
+			if(n_S == 0 || t[P_i[i]] - t[S_i[n_S-1]] > 0.5){
+				S_i[n_S] = P_i[i];
+				n_S++;
+			}
 		}
 	}
 

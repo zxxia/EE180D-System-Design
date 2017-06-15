@@ -21,6 +21,11 @@ typedef struct
 	double accel_y_seg3_min;
 	double gyro_y_abs_integral;
 	double period;
+	double gyro_z_skewness;
+	double gyro_z_max_min_ratio;
+	double gyro_z_skewness_positive;
+	double max;
+	double min;
 } GlobalFeature;
 
 typedef struct{
@@ -58,11 +63,21 @@ typedef struct
 	double accel_y_seg3_max, accel_y_seg3_min;
 } StairFeature;
 
+typedef struct
+{
+	double accel_x_seg0_max, accel_x_seg0_min;
+	double accel_x_seg1_max, accel_x_seg1_min;
+	double accel_x_seg2_max, accel_x_seg2_min;
+	double accel_x_seg3_max, accel_x_seg3_min;
+	double accel_x_abs_integral;
+	double period;
+} RunFeature;
+
 
 
 void segmentation(int* pos, int start_pos, int end_pos);
 
-void extract_global_feature(GlobalFeature* feature, int* pos, double* accel_y, double* gyro_y, double* t);
+void extract_global_feature(GlobalFeature* feature, int* pos, double* accel_y, double* gyro_y, double* t, double *gyro_z);
 
 void extract_turn_feature(TurnFeature* feature, int *pos, double* gyro_y, double* t);
 
@@ -70,14 +85,7 @@ void extract_walk_feature(WalkFeature* feature, int *pos, double* accel_x, doubl
 
 void extract_stair_feature(StairFeature* feature, int* pos, double* accel_x, double* accel_y, double* t);
 
-
-/*void jump_feature(double* accel_y, double* gyro_y,
-	double* time, int* S_i, int n_S, char* ofile_maxmin_name, 
-	char* ofile_jump_feature_name);
-void run_feature(double* accel_y, double* gyro_y,
-	double* time, int* S_i, int n_S, char* ofile_maxmin_name, 
-	char* ofile_run_feature_name);
-*/
+void extract_run_feature(RunFeature* feature, int* pos, double* accel_x, double* t);
 
 
 #endif

@@ -27,7 +27,7 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 	data_t ad, gd;
 	
 	//timer variable
-	int sec = 0, trigger = 1;
+	double sec = 0, trigger = 1.0;
 	
 	//Variables for file
 	int fd;
@@ -50,9 +50,8 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 	flock(fd, LOCK_EX);
 
 	//read data. Each file contains data for at least trigger seconds.
-
-	clock_t start_pt = clock();
 	fprintf(fp, "timestamp_before, timestamp_after, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z\n");
+	clock_t start_pt = clock();
 	do {
 		gettimeofday(&start, NULL);
 		ad = read_accel(accel, a_res);
@@ -65,7 +64,7 @@ void collect_data(mraa_i2c_context accel, mraa_i2c_context gyro, float a_res, fl
 		usleep(100);
 		//Check timer
 		clock_t diff = clock() - start_pt;
-		sec = diff / CLOCKS_PER_SEC;
+		sec = (double)diff / (double)CLOCKS_PER_SEC;
 	} while (sec < trigger);
 
 	//Clean up memory

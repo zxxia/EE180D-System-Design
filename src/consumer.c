@@ -127,7 +127,7 @@ int process_file(const char *fname) {
 
 	//Stride detection
 	S_i = (int *) malloc(sizeof(int) * n_samples);
-	n_S = stride_detection(gyro_z, n_samples, S_i);
+	n_S = stride_detection(t, gyro_z, n_samples, S_i);
 	if(n_S < 0){
 		fprintf(stderr, "find_peaks_and_troughs failed\n");
 		free(S_i);
@@ -147,18 +147,20 @@ int process_file(const char *fname) {
 	TurnFeature turn_feature;
 	WalkFeature walk_feature;
 	StairFeature stair_feature;
+	RunFeature run_feature;
 
 	int pos[5];
 	int motion_type;
 	int turn_direction;
 	int walk_speed;
 	int stair_direction;
+	int run_speed;
 
 	for(i = 0; i < n_S - 1; i++){
 		//Stride segmentation
 		segmentation(pos, S_i[i], S_i[i+1]);
 		//Extract global features
-		extract_global_feature(&global_feature, pos, accel_y, gyro_y, t);
+		extract_global_feature(&global_feature, pos, accel_y, gyro_y, t, gyro_z);
 		//Obtain movement type
 		motion_type = exe_global_neural_network(&global_feature);
 
@@ -214,7 +216,26 @@ int process_file(const char *fname) {
 			
 			
 			case RUN:
-			printf("Movement type is Running\n");
+			extract_run_feature(&run_feature, pos, accel_x, t);
+			run_speed = exe_run_neural_network(&run_feature);
+			switch(run_speed){
+				case SLOW_RUN:
+				printf("Movement type is Slow Running\n");
+				break;
+
+				case FAST_RUN:
+				printf("Movement type is Fast Running\n");
+				break;
+			}
+			
+			break;
+
+			case SQUAT:
+			printf("Movement type is Squating\n");
+			break;
+			
+			case BACK_WALK:
+			printf("Movement type is Backwards Walking\n");
 			break;
 		}
 

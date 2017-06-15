@@ -91,6 +91,37 @@ void integral(double* data, double* time, int start_pos, int end_pos, double* in
 	}
 }
 
+
+// Kurtosis
+void kurtosis(double* data, int start_pos, int end_pos, double* kurt_val)
+{
+	int i;
+	double std_val;
+	double mean_val;
+	double miu4 = 0.0; //Fourth central moment
+	mean(data, start_pos, end_pos, &mean_val);
+	std(data, start_pos, end_pos, &std_val);
+	*kurt_val = 0.0;
+	for(i = start_pos; i < end_pos; i++)
+		miu4 += pow(data[i] - mean_val, 4) / (end_pos - start_pos);
+	*kurt_val = miu4/pow(std_val, 4);
+}
+
+void skewness(double* data, int start_pos, int end_pos, double* skew_val)
+{
+	int i;
+	double std_val;
+	double mean_val;
+	double miu3 = 0.0; //Third central moment
+	mean(data, start_pos, end_pos, &mean_val);
+	std(data, start_pos, end_pos, &std_val);
+	*skew_val = 0.0;
+	for(i = start_pos; i < end_pos; i++)
+		miu3 += pow(data[i] - mean_val, 3) / (end_pos - start_pos);
+	*skew_val = miu3/pow(std_val, 3);
+
+}
+
 //Max-min ratio
 //Skewness?????Not a good one????
 //Kurtosis?????Consider for later

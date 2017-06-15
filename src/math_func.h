@@ -26,4 +26,8 @@ void mad(double* data, int start_pos, int end_pos, double* mad_val);
 
 //Compute numerical intergral in data from start_pos to end_pos. Store the result in integral_val.
 void integral(double* data, double* time, int start_pos, int end_pos, double* integral_val);
+
+void kurtosis(double* data, int start_pos, int end_pos, double* kurt_val);
+
+void skewness(double* data, int start_pos, int end_pos, double* skew_val);
 #endif

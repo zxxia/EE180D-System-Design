@@ -24,6 +24,6 @@ int find_peaks_and_troughs(
 		int *n_P, int *n_T
 		);
 
-int stride_detection(double *gyro_z, int n_samples, int *S_i);
+int stride_detection(double* t, double *gyro_z, int n_samples, int *S_i);
 
 #endif

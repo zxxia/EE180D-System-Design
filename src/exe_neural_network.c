@@ -2,10 +2,11 @@
 
 void init_networks()
 {
-    global_ann = fann_create_from_file("net/GLOBAL.net");
+    global_ann = fann_create_from_file("net/GLOBAL_new.net");
     turn_ann = fann_create_from_file("net/TURN.net");
     walk_ann = fann_create_from_file("net/WALK.net");
     stair_ann = fann_create_from_file("net/STAIRS.net");
+    run_ann = fann_create_from_file("net/RUN.net");
 }
 
 void destroy_networks()
@@ -14,6 +15,7 @@ void destroy_networks()
     fann_destroy(turn_ann);
     fann_destroy(walk_ann);
     fann_destroy(stair_ann);
+    fann_destroy(run_ann);
 }
 
 int exe_global_neural_network(const GlobalFeature *feature)
@@ -23,7 +25,7 @@ int exe_global_neural_network(const GlobalFeature *feature)
 
     double max;
     fann_type *calc_out;
-    fann_type input[10];
+    fann_type input[13];
    
     max = -100;
     /* parse the feature data*/
@@ -36,12 +38,15 @@ int exe_global_neural_network(const GlobalFeature *feature)
     input[5] = feature->accel_y_seg2_min/6.0;
     input[6] = feature->accel_y_seg3_max/6.0;
     input[7] = feature->accel_y_seg3_min/6.0;
-    input[8] = feature->gyro_y_abs_integral/176.690486;
-    input[9] = feature->period/3.272060;
+    input[8] = feature->gyro_y_abs_integral/180.833296;
+    input[9] = feature->period/3.682636;
+    input[10] = feature->gyro_z_skewness/0.022730;
+    input[11] = feature->gyro_z_max_min_ratio/1958.129884;
+    input[12] = feature->gyro_z_skewness_positive/2.487742;
 
     /*Caluculate the type predicted by our trained network*/
     calc_out = fann_run(global_ann, input);
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 6; i++) {
         if (calc_out[i] > max) {
             max = calc_out[i];
             location = i;
@@ -162,6 +167,43 @@ int exe_stair_neural_network(const StairFeature *feature)
 
     /*Caluculate the type predicted by our trained network*/
     calc_out = fann_run(stair_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}
+
+
+int exe_run_neural_network(const RunFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[10];
+   
+    max = -100;
+    /* parse the feature data*/
+
+
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg1_max/6.0;
+    input[3] = feature->accel_x_seg1_min/6.0;
+    input[4] = feature->accel_x_seg2_max/6.0;
+    input[5] = feature->accel_x_seg2_min/6.0;
+    input[6] = feature->accel_x_seg3_max/6.0;
+    input[7] = feature->accel_x_seg3_min/6.0;
+
+    input[8] = feature->accel_x_abs_integral/0.696036;
+    input[9] = feature->period/3.080821;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(run_ann, input);
     for (i = 0; i < 2; i++) {
         if (calc_out[i] > max) {
             max = calc_out[i];

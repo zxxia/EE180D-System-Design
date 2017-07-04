@@ -1,5 +1,6 @@
 #include "math_func.h"
 
+// Maximum
 void max(double* data, int start_pos, int end_pos, double* max_val)
 {
 	int i;
@@ -10,6 +11,7 @@ void max(double* data, int start_pos, int end_pos, double* max_val)
 	}
 }
 
+// Minimum
 void min(double* data, int start_pos, int end_pos, double* min_val)
 {
 	int i;
@@ -32,7 +34,7 @@ void mean(double* data, int start_pos, int end_pos, double* mean_val)
 	*mean_val = sum / (double)totalPos;
 }
 
-//Variance feature
+//Variance
 void variance(double* data, int start_pos, int end_pos, double* var)
 {
 	int i;
@@ -45,7 +47,7 @@ void variance(double* data, int start_pos, int end_pos, double* var)
 	*var = sum / (double)totalPos;
 }
 
-//STD
+//Standard deviation
 void std(double* data, int start_pos, int end_pos, double* std_val)
 {
 	double var;
@@ -53,7 +55,7 @@ void std(double* data, int start_pos, int end_pos, double* std_val)
 	*std_val = sqrt(var);
 }
 
-//RMS
+//Root-mean-square
 void rms(double* data, int start_pos, int end_pos, double* rms_val)
 {
 	int i;
@@ -65,7 +67,7 @@ void rms(double* data, int start_pos, int end_pos, double* rms_val)
 	*rms_val = pow((sum / (double)totalPos), 0.5);
 }
 
-//MAD
+//Mean absolute deviation
 void mad(double* data, int start_pos, int end_pos, double* mad_val)
 {
 	int i;
@@ -78,6 +80,7 @@ void mad(double* data, int start_pos, int end_pos, double* mad_val)
 	*mad_val = sum / (double)totalPos;
 }
 
+
 //Numerical Integration using Trapezoid Method
 void integral(double* data, double* time, int start_pos, int end_pos, double* integral_val)
 {
@@ -88,11 +91,38 @@ void integral(double* data, double* time, int start_pos, int end_pos, double* in
 	}
 }
 
-//Max-min ratio
 
+// Kurtosis
+void kurtosis(double* data, int start_pos, int end_pos, double* kurt_val)
+{
+	int i;
+	double std_val;
+	double mean_val;
+	double miu4 = 0.0; //Fourth central moment
+	mean(data, start_pos, end_pos, &mean_val);
+	std(data, start_pos, end_pos, &std_val);
+	*kurt_val = 0.0;
+	for(i = start_pos; i < end_pos; i++)
+		miu4 += pow(data[i] - mean_val, 4) / (end_pos - start_pos);
+	*kurt_val = miu4/pow(std_val, 4);
+}
+
+void skewness(double* data, int start_pos, int end_pos, double* skew_val)
+{
+	int i;
+	double std_val;
+	double mean_val;
+	double miu3 = 0.0; //Third central moment
+	mean(data, start_pos, end_pos, &mean_val);
+	std(data, start_pos, end_pos, &std_val);
+	*skew_val = 0.0;
+	for(i = start_pos; i < end_pos; i++)
+		miu3 += pow(data[i] - mean_val, 3) / (end_pos - start_pos);
+	*skew_val = miu3/pow(std_val, 3);
+
+}
+
+//Max-min ratio
 //Skewness?????Not a good one????
 //Kurtosis?????Consider for later
 //Correlation??????????
-
-// Divide the stride into 4 segmentations
-// Extract max min on each segmentation

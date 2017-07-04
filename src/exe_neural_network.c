@@ -1,98 +1,214 @@
+#include "exe_neural_network.h"
 
+void init_networks()
+{
+    global_ann = fann_create_from_file("net/GLOBAL_new.net");
+    turn_ann = fann_create_from_file("net/TURN.net");
+    walk_ann = fann_create_from_file("net/WALK.net");
+    stair_ann = fann_create_from_file("net/STAIRS.net");
+    run_ann = fann_create_from_file("net/RUN.net");
+}
 
-int main(int argc, char **argv)
+void destroy_networks()
+{
+    fann_destroy(global_ann);
+    fann_destroy(turn_ann);
+    fann_destroy(walk_ann);
+    fann_destroy(stair_ann);
+    fann_destroy(run_ann);
+}
+
+int exe_global_neural_network(const GlobalFeature *feature)
 {
     int i;
     int location;
 
-    float max;
+    double max;
     fann_type *calc_out;
-    fann_type input[17];
-    struct fann *ann;
+    fann_type input[13];
+   
+    max = -100;
+    /* parse the feature data*/
 
-    FILE *fp;
-    fp = fopen(argv[1], "r+");
-    //There are total three types of movement which means we will have a 3*3 confusion matix
-    int conf_matrix[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
-    int answer[3] = {-1,-1,-1};
-    int answerLoc;
-    int numLines = 0;
-    int inN = 0;
-    int outN = 0;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    int rv;
-    
-    ann = fann_create_from_file("TEST.net");
+    input[0] = feature->accel_y_seg0_max/6.0; 
+    input[1] = feature->accel_y_seg0_min/6.0;
+    input[2] = feature->accel_y_seg1_max/6.0;
+    input[3] = feature->accel_y_seg1_min/6.0;
+    input[4] = feature->accel_y_seg2_max/6.0;
+    input[5] = feature->accel_y_seg2_min/6.0;
+    input[6] = feature->accel_y_seg3_max/6.0;
+    input[7] = feature->accel_y_seg3_min/6.0;
+    input[8] = feature->gyro_y_abs_integral/180.833296;
+    input[9] = feature->period/3.682636;
+    input[10] = feature->gyro_z_skewness/0.022730;
+    input[11] = feature->gyro_z_max_min_ratio/1958.129884;
+    input[12] = feature->gyro_z_skewness_positive/2.487742;
 
-
-    /* get number of lines in the file */
-    read = getline(&line, &len, fp);
-    rv = sscanf(line, "%d\t%d\t%d\n", &numLines, &inN, &outN);
-    if (rv != 3) {
-        exit(EXIT_FAILURE);
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(global_ann, input);
+    for (i = 0; i < 6; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
     }
+    return location;
+}
 
-    /* start reading the data from the file into the data structures */
-    i = 0;
-    while ((read = getline(&line, &len, fp)) != -1) {
-        max = -100;
-        /* parse the feature data*/
-        rv = sscanf(line, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", 
-            &input[0], &input[1], &input[2],&input[3],&input[4],
-            &input[5], &input[6], &input[7],&input[8],&input[9],
-            &input[10], &input[11], &input[12],&input[13],&input[14],
-            &input[15], &input[16]);
-        if (rv != 17) {
-            fprintf(stderr,"Failed to read line2");
-            exit(EXIT_FAILURE);
-        }
-        /*Caluculate the type predicted by our trained network*/
-        calc_out = fann_run(ann, input);
-        for (i = 0; i < 3; i++) {
-            if (calc_out[i] > max) {
-                max = calc_out[i];
-                location = i;
-            }
-        }
+int exe_turn_neural_network(const TurnFeature *feature)
+{
+    int i;
+    int location;
 
-        read = getline(&line, &len, fp);
-        /* parse the type data in the test file*/
-        rv = sscanf(line, "%d\t%d\t%d\n", &answer[0], &answer[1], &answer[2]);
-        if (rv != 3) {
-            fprintf(stderr,"Failed to read line3");
-            exit(EXIT_FAILURE);
-        }
-        /*Get the expected type*/
-        for(i=0; i<3; i++) {
-            if(answer[i] == 1) {
-                answerLoc = i;
-                break;
-            }
-        }
-        /*Add this type in certain position in confusion matrix*/
-        conf_matrix[answerLoc][location]++;
+    double max;
+    fann_type *calc_out;
+    fann_type input[9];
+   
+    max = -100;
+    /* parse the feature data*/
 
-        printf("Input values: %f, %f, %f, %f, %f -> Movement type is %d\n", input[0], input[1], input[2], input[3], input[4], location);
-        sleep(1);
+
+    input[0] = feature->gyro_y_seg0_max/500.0;
+    input[1] = feature->gyro_y_seg0_min/500.0;
+    input[2] = feature->gyro_y_seg1_max/500.0;
+    input[3] = feature->gyro_y_seg1_min/500.0;
+    input[4] = feature->gyro_y_seg2_max/500.0;
+    input[5] = feature->gyro_y_seg2_min/500.0;
+    input[6] = feature->gyro_y_seg3_max/500.0;
+    input[7] = feature->gyro_y_seg3_min/500.0;
+    input[8] = feature->gyro_y_integral/176.690486;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(turn_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
     }
-
-    /*Display the confusion matrix in std::output*/
-    int row;
-    int col;
-    for(row = 0; row < 3; row++) {
-        for(col = 0; col < 3; col++) {
-            printf("%d\t", conf_matrix[row][col]);
-        }
-        printf("\n");
-    }
-
-    fclose(fp);
-    fann_destroy(ann);
-    return 0;
+    return location;
 }
 
 
+int exe_walk_neural_network(const WalkFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[13];
+   
+    max = -100;
+    /* parse the feature data*/
 
 
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg0_rms/6.0;
+
+    input[3] = feature->accel_x_seg1_max/6.0;
+    input[4] = feature->accel_x_seg1_min/6.0;
+    input[5] = feature->accel_x_seg1_rms/6.0;
+
+    input[6] = feature->accel_x_seg2_max/6.0;
+    input[7] = feature->accel_x_seg2_min/6.0;
+    input[8] = feature->accel_x_seg2_rms/6.0;
+
+    input[9] = feature->accel_x_seg3_max/6.0;
+    input[10] = feature->accel_x_seg3_min/6.0;
+    input[11] = feature->accel_x_seg3_rms/6.0;
+
+    input[12] = feature->period/3.272060;
+
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(walk_ann, input);
+    for (i = 0; i < 3; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}
+
+
+int exe_stair_neural_network(const StairFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[16];
+   
+    max = -100;
+    /* parse the feature data*/
+
+
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg1_max/6.0;
+    input[3] = feature->accel_x_seg1_min/6.0;
+    input[4] = feature->accel_x_seg2_max/6.0;
+    input[5] = feature->accel_x_seg2_min/6.0;
+    input[6] = feature->accel_x_seg3_max/6.0;
+    input[7] = feature->accel_x_seg3_min/6.0;
+
+    input[8] = feature->accel_y_seg0_max/6.0;
+    input[9] = feature->accel_y_seg0_min/6.0;
+    input[10] = feature->accel_y_seg1_max/6.0;
+    input[11] = feature->accel_y_seg1_min/6.0;
+    input[12] = feature->accel_y_seg2_max/6.0;
+    input[13] = feature->accel_y_seg2_min/6.0;
+    input[14] = feature->accel_y_seg3_max/6.0;
+    input[15] = feature->accel_y_seg3_min/6.0;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(stair_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}
+
+
+int exe_run_neural_network(const RunFeature *feature)
+{
+    int i;
+    int location;
+
+    double max;
+    fann_type *calc_out;
+    fann_type input[10];
+   
+    max = -100;
+    /* parse the feature data*/
+
+
+    input[0] = feature->accel_x_seg0_max/6.0;
+    input[1] = feature->accel_x_seg0_min/6.0;
+    input[2] = feature->accel_x_seg1_max/6.0;
+    input[3] = feature->accel_x_seg1_min/6.0;
+    input[4] = feature->accel_x_seg2_max/6.0;
+    input[5] = feature->accel_x_seg2_min/6.0;
+    input[6] = feature->accel_x_seg3_max/6.0;
+    input[7] = feature->accel_x_seg3_min/6.0;
+
+    input[8] = feature->accel_x_abs_integral/0.696036;
+    input[9] = feature->period/3.080821;
+
+    /*Caluculate the type predicted by our trained network*/
+    calc_out = fann_run(run_ann, input);
+    for (i = 0; i < 2; i++) {
+        if (calc_out[i] > max) {
+            max = calc_out[i];
+            location = i;
+        }
+    }
+    return location;
+}

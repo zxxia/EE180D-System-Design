@@ -1,4 +1,7 @@
 # ee180d_project
+
+This is a motion detection program running on Intel Edison Platform. It can classify motions like walking, running, still, start ascent/descent, and etc.
+
 Usage:
 
 make
